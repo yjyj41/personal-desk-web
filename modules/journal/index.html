@@ -253,6 +253,7 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 <div class="book">
 <header class="masthead">
 <div class="authbar">
+<span id="connectionStatus" role="status">Google account</span>
 <span id="saveState" class="savestate" role="status" aria-live="polite"></span><button class="authbtn" id="retrySave" hidden>Retry</button><button class="authbtn" id="resolveConflict" hidden>Review conflict</button>
 <button class="authbtn" id="signInBtn">Google sign-in</button>
 <span id="signedIn"><span id="userName"></span><button class="authbtn" id="signOutBtn">Sign out</button></span>
@@ -516,6 +517,7 @@ async function connectUser(user) {
   document.getElementById('gateSignIn').hidden = !!user;
   document.getElementById('signedIn').style.display = user ? 'inline-flex' : 'none';
   document.getElementById('userName').textContent = user?.displayName || user?.email || '';
+  document.getElementById('connectionStatus').textContent = user ? 'Signed in' : 'Not signed in';
   document.querySelector('#gate h2').textContent = user ? 'Opening your pages…' : 'Open your notebook.';
   if (!user) { setSaveState(''); return; }
   viewWeek=null; scheduleEditing=null; journalMonth=null; viewDaily=null; viewMonth=null; viewJournal=null; viewFuture=null; viewHabit=null;
@@ -547,8 +549,8 @@ async function connectUser(user) {
 }
 document.getElementById('signInBtn').onclick = document.getElementById('gateSignIn').onclick =
   async () => {
-    const button=document.getElementById('gateSignIn'),error=document.getElementById('authError');error.hidden=true;button.disabled=true;
-    try{await signInWithPopup(auth,provider);}catch(e){error.textContent=authErrorMessage(e);error.hidden=false;}finally{button.disabled=false;}
+    const button=document.getElementById('gateSignIn'),headerButton=document.getElementById('signInBtn'),error=document.getElementById('authError');error.hidden=true;button.disabled=true;headerButton.disabled=true;
+    try{await signInWithPopup(auth,provider);}catch(e){error.textContent=authErrorMessage(e);error.hidden=false;}finally{button.disabled=false;headerButton.disabled=false;}
   };
 document.getElementById('signOutBtn').onclick = async () => {
   if (signingOut) return;
