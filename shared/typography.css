@@ -1,0 +1,4 @@
+@font-face{font-family:Pretendard;src:url('../assets/fonts/PretendardVariable.woff2') format('woff2');font-weight:100 900;font-display:swap}
+@font-face{font-family:Belleza;src:url('../assets/fonts/Belleza-Regular.ttf') format('truetype');font-weight:400;font-display:swap}
+@font-face{font-family:'Hanken Grotesk';src:url('../assets/fonts/HankenGrotesk-Variable.ttf') format('truetype');font-weight:100 900;font-display:swap}
+:root{--font-ui:'Apercu Pro','Apercu','Hanken Grotesk','Pretendard',sans-serif;--font-display:'Optima','Optima Nova','Belleza','Pretendard',sans-serif;--font-meta:'Apercu Mono Pro','Apercu Mono','SFMono-Regular',Consolas,'Pretendard',monospace}

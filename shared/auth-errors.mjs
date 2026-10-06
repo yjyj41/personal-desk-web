@@ -1,0 +1,9 @@
+export function authErrorMessage(error){
+ switch(error?.code){
+  case 'auth/unauthorized-domain':return 'This address is not enabled for Google sign-in. For the local preview, open http://localhost:4173. Other hosts must be added to Firebase Authentication → Settings → Authorized domains.';
+  case 'auth/popup-blocked':return 'The sign-in window was blocked. Allow pop-ups for this site, then try again.';
+  case 'auth/popup-closed-by-user':case 'auth/cancelled-popup-request':return 'Sign-in was cancelled. Your records have not changed.';
+  case 'auth/network-request-failed':return 'Google sign-in could not connect. Check your connection and try again.';
+  default:return 'Could not sign in. Please try again. If this continues, check your Google sign-in settings.';
+ }
+}
