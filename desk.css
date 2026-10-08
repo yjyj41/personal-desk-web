@@ -12,3 +12,5 @@
 @media(prefers-reduced-motion:no-preference){.shortcut-grid a,nav>a,button{transition:background .15s,color .15s}}@media print{.sidebar,.topbar,.date-bar,.page-heading,#overview,.desk-footer{display:none}.desk{margin:0}main{padding:0}}
 
 .host-notice{border:1px solid #111;background:#f1f1ec;padding:18px;margin-bottom:25px;font-size:13px}.host-notice p{margin:0 0 12px}.host-notice a{display:inline-block;text-decoration:underline;margin:0 20px 5px 0}
+
+body[data-view=spending] .date-bar,body[data-view=spending] .date-stamp{display:none}body[data-view=spending] .page-heading{border-bottom:1px solid var(--line);padding-bottom:24px}

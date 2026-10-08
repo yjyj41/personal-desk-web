@@ -84,18 +84,13 @@
 
 <div class="wrap grid" style="gap:22px">
 
-  <!-- Upload -->
-  <div id="drop">
-    <div class="big">Drop your statement here.</div>
-    <div class="small">Choose a Monzo CSV. Import more months any time; duplicates are skipped.</div>
-    <input id="file" type="file" accept=".csv,text/csv" multiple class="hidden">
-  </div>
-
   <!-- Controls -->
   <div class="flex-between" id="controls">
     <div class="row">
-      <label class="muted" style="font-size:13px">Month</label>
-      <select id="month"></select>
+      <button class="ghost" id="previousMonth" aria-label="Previous month">‹</button>
+      <label for="month">Month</label><select id="month" aria-label="Selected month"></select>
+      <button class="ghost" id="nextMonth" aria-label="Next month">›</button>
+      <button class="ghost" id="currentMonth">This month</button>
     </div>
     <div class="row">
       <button class="ghost" id="exportBtn">Export JSON</button>
@@ -105,8 +100,16 @@
     </div>
   </div>
 
+  <div class="month-heading"><span>MONTHLY REVIEW</span><h2 id="monthTitle"></h2><p>Income, spending and budgets for the whole month.</p></div>
   <!-- Summary cards -->
   <div class="grid cards" id="cards"></div>
+
+  <!-- Upload -->
+  <div id="drop">
+    <div class="big">Drop your statement here.</div>
+    <div class="small">Choose a Monzo CSV. Import more months any time; duplicates are skipped.</div>
+    <input id="file" type="file" accept=".csv,text/csv" multiple class="hidden">
+  </div>
 
   <!-- Charts -->
   <div class="grid charts">
@@ -198,7 +201,8 @@ import {validDate} from '../../shared/dates.mjs';
 "use strict";
 // ---------- storage ----------
 const KEY="personal_desk_spending_v1";
-let deskMonth="";
+const currentMonth=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`};
+let deskMonth=currentMonth();
 let store = load();
 function load(){
   let s;
@@ -313,6 +317,7 @@ function render(){
   const chosen=deskMonth||(sel.value && ms.includes(sel.value)?sel.value:ms[0]);
   sel.innerHTML=ms.map(m=>`<option value="${m}" ${m===chosen?"selected":""}>${monthLabel(m)}</option>`).join("");
 
+  document.getElementById('monthTitle').textContent=new Date(chosen+'-01T12:00:00').toLocaleDateString('en-GB',{month:'long',year:'numeric'});
   const hasData=store.tx.length>0;
   document.getElementById("controls").style.display="";
   sendDeskSummary(chosen);
@@ -340,14 +345,14 @@ function render(){
   let budgetCard="";
   if(store.totalBudget){
     const left=store.totalBudget-curSpend; const cls=left<0?"up":"down";
-    budgetCard=`<div class="panel card"><div class="label">월 목표 대비</div>
+    budgetCard=`<div class="panel card"><div class="label">Monthly budget</div>
       <div class="value">${fmt(curSpend)} <span class="muted" style="font-size:15px">/ ${fmt(store.totalBudget)}</span></div>
       <div class="delta ${cls}">${left>=0?"남음 "+fmt(left):"초과 "+fmt(left)}</div></div>`;
   }
   document.getElementById("cards").innerHTML=`
-    <div class="panel card"><div class="label">This month Total spent (${monthLabel(m)})</div><div class="value">${fmt(curSpend)}</div>${deltaHtml}</div>
-    <div class="panel card"><div class="label">This month 수입</div><div class="value">${fmt(income)}</div><div class="delta flat">순흐름 ${income-curSpend>=0?"+":""}${fmt(income-curSpend)}</div></div>
-    <div class="panel card"><div class="label">거래 건수</div><div class="value">${cur_tx.length}</div><div class="delta flat">지출 ${cur_tx.filter(t=>t.amount<0).length}건</div></div>
+    <div class="panel card"><div class="label">Total spent (${monthLabel(m)})</div><div class="value">${fmt(curSpend)}</div>${deltaHtml}</div>
+    <div class="panel card"><div class="label">Income</div><div class="value">${fmt(income)}</div><div class="delta flat">순흐름 ${income-curSpend>=0?"+":""}${fmt(income-curSpend)}</div></div>
+    <div class="panel card"><div class="label">Transactions</div><div class="value">${cur_tx.length}</div><div class="delta flat">지출 ${cur_tx.filter(t=>t.amount<0).length}건</div></div>
     ${budgetCard}`;
 
   destroy();
@@ -585,6 +590,9 @@ function handleFiles(files){
     rd.readAsText(f);
   });
 }
+document.getElementById('previousMonth').addEventListener('click',()=>{deskMonth=prevMonth(deskMonth);render()});
+document.getElementById('nextMonth').addEventListener('click',()=>{const [year,month]=deskMonth.split('-').map(Number);deskMonth=new Date(Date.UTC(year,month,1)).toISOString().slice(0,7);render()});
+document.getElementById('currentMonth').addEventListener('click',()=>{deskMonth=currentMonth();render()});
 document.getElementById("month").addEventListener("change",()=>{deskMonth=document.getElementById("month").value;render();});
 document.getElementById("search").addEventListener("input",e=>{txFilter=e.target.value;
   const m=document.getElementById("month").value;renderTx(store.tx.filter(t=>ym(t.date)===m));});
@@ -622,7 +630,7 @@ function sendDeskSummary(month){
 }
 window.addEventListener('message',event=>{
  if(event.origin!==location.origin||event.source!==parent||event.data?.channel!=='personal-desk'||event.data?.type!=='context')return;
- if(/^\d{4}-\d{2}-\d{2}$/.test(event.data.date)){deskMonth=event.data.date.slice(0,7);render();}
+ if(validDate(event.data.date)){sendDeskSummary(event.data.date.slice(0,7));}
 });
 render();
 </script>

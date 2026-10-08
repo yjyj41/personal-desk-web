@@ -29,6 +29,7 @@ function route(){
  const route=parseRoute(location.hash);view=route.view;journalTab=route.tab;
  document.body.dataset.view=view;document.title=labels[view][0]+' · Personal desk';
  $('title').replaceChildren(document.createTextNode(labels[view][0]));const dot=document.createElement('span');dot.className='title-dot';dot.textContent='.';$('title').append(dot);$('subtitle').textContent=labels[view][1];updateNavigation();
+ $('period').textContent=view==='spending'?'MONTHLY OVERVIEW':new Date(selected+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
  $('today-layout').hidden=!['today','journal'].includes(view);$('today-layout').classList.toggle('full',view==='journal');$('overview').hidden=view!=='today';
  for(const m of ['routine','spending','settings'])$(m+'-panel').hidden=view!==m;
  if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html';
