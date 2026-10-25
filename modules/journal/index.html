@@ -249,8 +249,8 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261025f">
-<link rel="stylesheet" href="./redesign.css?v=20261025f">
+<link rel="stylesheet" href="./desk.css?v=20261025g">
+<link rel="stylesheet" href="./redesign.css?v=20261025g">
 </head>
 <body>
 <div class="book">
@@ -627,8 +627,10 @@ function shiftMonth(delta){ let m=viewMonth.m+delta, y=viewMonth.y; while(m<0){m
 let gcExtras=[];
 const gcMonth={key:'',events:[],loaded:0,state:'off',error:''};
 function gcOn(){try{return calendar.connected();}catch{return false;}}
-function hhmm(iso){const d=new Date(iso);return pad2(d.getHours())+':'+pad2(d.getMinutes());}
-function localKeyOf(iso){const d=new Date(iso);return dayKey(d.getFullYear(),d.getMonth(),d.getDate());}
+function viewZone(){return db?.googleCalendar?.zone||Intl.DateTimeFormat().resolvedOptions().timeZone;}
+function zoned(iso){const p=Object.fromEntries(new Intl.DateTimeFormat('en-CA',{timeZone:viewZone(),year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).formatToParts(new Date(iso)).map(x=>[x.type,x.value]));return {key:p.year+'-'+p.month+'-'+p.day,time:p.hour+':'+p.minute};}
+function hhmm(iso){return zoned(iso).time;}
+function localKeyOf(iso){return zoned(iso).key;}
 /* Google events for a day: every calendar shown in Google when connected, otherwise the sync extras. Blocks already linked to the journal are not repeated. */
 function googleEventsOn(k){
   const linked=new Set(Object.values(db.sched||{}).flat().map(b=>b.gc?.eventId).filter(Boolean));

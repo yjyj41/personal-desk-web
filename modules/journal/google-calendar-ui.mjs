@@ -1,4 +1,19 @@
-import {SCOPES,copy,same,createCalendarAPI,reconcile,instant,importable,fingerprint,exportEventId} from './google-calendar.mjs';
+import {SCOPES,copy,same,createCalendarAPI,reconcile,instant,parts,importable,fingerprint,exportEventId} from './google-calendar.mjs';
+
+const ZONES=['Europe/London','Asia/Seoul','Europe/Paris','America/New_York','UTC'];
+// Change the sync time zone. Blocks you made keep their clock time (and are re-sent);
+// copies of Google events keep their real moment, so their slots move. Copies that no
+// longer fit the 06–24 grid are dropped from the journal; the Google originals stay.
+export function moveZone(data,from,to){
+  if(!from||from===to)return 0;const moves=[];
+  for(const [key,list] of Object.entries(data.sched||{}))for(const b of list)if(b.gc&&String(b.id).startsWith('g'))moves.push({key,b});
+  for(const {key,b} of moves){
+    const list=data.sched[key];list.splice(list.indexOf(b),1);if(!list.length)delete data.sched[key];
+    const start=parts(instant(key,360+b.s*30,from),to),len=b.e-b.s;
+    if(start.minute>=360&&start.minute%30===0&&start.second===0&&(start.minute-360)/30+len<=35){b.s=(start.minute-360)/30;b.e=b.s+len;(data.sched[start.key]||=[]).push(b);}
+  }
+  return moves.length;
+}
 
 export function installCalendar({getData,mutate,persist,ready,getUid,authorize,render,range,onExtras=()=>{},onConnected=()=>{}}){
   let token=null,expires=0,owner=null,generation=0,timer,busy=false,problem=false,issues=[],extras=[],calendars=[],allCalendars=[];
@@ -7,7 +22,7 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
     <p class="hint">Monthly에 일정을 보여 주는 데는 이 설정이 필요 없어요. 여기서는 시간표 블록을 Google 캘린더 한 곳과 주고받는 고급 기능만 다룹니다. 할 일·일기·사진은 보내지 않습니다.</p>
     <div class="backup-actions" style="justify-content:flex-start"><button type="button" class="authbtn" id="gcConnect">Google 연결 / 재인증</button><button type="button" class="authbtn" id="gcSync">지금 동기화</button><button type="button" class="authbtn" id="gcDisconnect">이 기기 연결 해제</button></div>
     <label class="schedule-field">연결할 캘린더<select id="gcCalendar"><option value="">연결 후 선택</option></select></label>
-    <label class="schedule-field">시간대<input id="gcZone" readonly></label>
+    <label class="schedule-field">시간대 (Google로 보낼 때 기준)<select id="gcZone"></select></label>
     <label class="hint"><input type="checkbox" id="gcDefault"> 새 ‘계획’은 기본적으로 Google에 표시 (기존 기록·실제 기록에는 적용 안 함)</label>
     <p class="hint" id="gcStatus" role="status" aria-live="polite">연결하지 않음 · 기존 기록은 그대로 유지됩니다.</p>
     <p class="hint">앱이 열려 있을 때 약 1분마다 갱신합니다. 브라우저를 다시 열거나 인증이 만료되면 다시 연결하세요. 현재 보는 달/주의 일정과 연결된 기록을 동기화합니다. 종일·초대 일정·06시 이전·30분 단위가 아닌 일정은 아래 목록에서 원본을 확인합니다.</p>
@@ -21,7 +36,7 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
   const flush=async()=>{if(!ready()||!await persist())throw new Error('먼저 Firebase 저장·충돌 해결을 완료해 주세요.');};
   function setBusy(value){busy=value;for(const id of ['gcConnect','gcSync','gcDisconnect','gcCalendar','gcDefault'])el(id).disabled=value;}
   function draw(){
-    el('gcDefault').checked=!!config().defaultSend;el('gcZone').value=config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone;
+    el('gcDefault').checked=!!config().defaultSend;{const z=el('gcZone'),cur=config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone,list=[...new Set([cur,...ZONES,Intl.DateTimeFormat().resolvedOptions().timeZone])];if(z.options.length!==list.length||[...z.options].some((o,i)=>o.value!==list[i])){z.textContent='';for(const v of list){const o=document.createElement('option');o.value=v;o.textContent=v;z.append(o);}}z.value=cur;}
     if(calendars.length)el('gcCalendar').value=config().calendar||'';
     el('gcIssues').textContent='';
     for(const issue of issues){
@@ -79,6 +94,14 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
     if(!confirm('이 캘린더의 일정을 불렛저널로 가져오고, 표시를 켠 기록을 여기에 저장할까요? 기존에 연결된 다른 캘린더 일정은 옮기지 않습니다.')){draw();return;}
     mutate(data=>{data.googleCalendar={...config(),calendar,zone:config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone,defaultSend:!!config().defaultSend};});draw();await run();
   };
+  el('gcZone').onchange=async()=>{
+    const from=config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone,to=el('gcZone').value;
+    if(from===to)return;
+    if(busy||!ready()){status('잠시 후 다시 바꿔 주세요.');draw();return;}
+    if(!confirm('시간대를 '+from+' → '+to+'로 바꿀까요?\n\n직접 만든 시간표 블록은 같은 시각(예: 11:30)으로 유지되고, Google에 올린 일정은 새 시간대 기준으로 다시 맞춰집니다.')){draw();return;}
+    mutate(data=>{moveZone(data,from,to);data.googleCalendar={...(data.googleCalendar||{}),zone:to};});
+    render();draw();problem=false;await run();onConnected(connected());
+  };
   el('gcDefault').onchange=()=>{mutate(data=>{data.googleCalendar={...config(),defaultSend:el('gcDefault').checked};});};
   el('gcSync').onclick=()=>{problem=false;return run();};
   function reset(){generation++;token=null;expires=0;owner=null;clearTimeout(timer);busy=false;problem=false;issues=[];extras=[];onExtras([]);onConnected(false);calendars=[];allCalendars=[];el('gcCalendar').innerHTML='<option value="">연결 후 선택</option>';setBusy(false);status('이 기기 연결 해제됨 · 기록과 Google 일정은 유지됩니다.');draw();}
@@ -111,13 +134,13 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
   // Read-only view of every calendar shown in Google Calendar, for the Monthly page.
   async function monthEvents(startKey,endKey){
     if(!connected())return null;
-    const zone=Intl.DateTimeFormat().resolvedOptions().timeZone,min=instant(startKey,0,zone),max=instant(endKey,0,zone);
+    const zone=config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone,min=instant(startKey,0,zone),max=instant(endKey,0,zone);
     const shown=allCalendars.filter(c=>c.selected!==false&&c.accessRole!=='freeBusyReader');
     const results=await Promise.allSettled(shown.map(c=>api.events(c.id,min,max).then(items=>items.filter(e=>e.status!=='cancelled').map(e=>({...e,_cal:{id:c.id,summary:c.summaryOverride||c.summary,color:c.backgroundColor||'#6B6B67'}})))));
     const failed=results.filter(r=>r.status==='rejected');
     if(failed.length===results.length&&failed.length)throw failed[0].reason;
     return results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
   }
-  return {reset,draw,run,beforeSave,monthEvents,connected:()=>!!connected(),calendarList:()=>allCalendars.filter(c=>c.selected!==false&&c.accessRole!=='freeBusyReader').map(c=>({id:c.id,summary:c.summaryOverride||c.summary,color:c.backgroundColor||'#6B6B67',primary:!!c.primary})),connect:()=>el('gcConnect').click(),isBusy:()=>busy,defaultSend:()=>!!config().calendar&&!!config().defaultSend,
+  return {reset,draw,run,beforeSave,monthEvents,connected:()=>!!connected(),zone:()=>config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone,calendarList:()=>allCalendars.filter(c=>c.selected!==false&&c.accessRole!=='freeBusyReader').map(c=>({id:c.id,summary:c.summaryOverride||c.summary,color:c.backgroundColor||'#6B6B67',primary:!!c.primary})),connect:()=>el('gcConnect').click(),isBusy:()=>busy,defaultSend:()=>!!config().calendar&&!!config().defaultSend,
     changed(){draw();clearTimeout(timer);if(connected())timer=setTimeout(run,2000);}};
 }
