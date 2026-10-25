@@ -1,6 +1,6 @@
 import {SCOPES,copy,same,createCalendarAPI,reconcile,instant,importable,fingerprint,exportEventId} from './google-calendar.mjs';
 
-export function installCalendar({getData,mutate,persist,ready,getUid,authorize,render,range}){
+export function installCalendar({getData,mutate,persist,ready,getUid,authorize,render,range,onExtras=()=>{}}){
   let token=null,expires=0,owner=null,generation=0,timer,busy=false,problem=false,issues=[],extras=[],calendars=[];
   const host=document.getElementById('googleCalendarPanel');
   host.innerHTML=`<details class="fold"><summary>Google Calendar 연동</summary>
@@ -59,7 +59,7 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
       const result=await reconcile({api,uid,calendar:c.calendar,zone:c.zone,min:instant(start,0,c.zone),max:instant(end,0,c.zone),getData,
         update:mutate,persist,valid:()=>epoch===generation&&uid===getUid()&&ready()&&config().calendar===c.calendar});
       if(epoch!==generation)return;
-      issues=result.issues;extras=result.extras;render();draw();status(issues.length?'동기화 완료 · 아래 확인 사항 '+issues.length+'개':'Google 동기화 완료 · '+new Date().toLocaleTimeString());
+      issues=result.issues;extras=result.extras;render();draw();onExtras(extras);status(issues.length?'동기화 완료 · 아래 확인 사항 '+issues.length+'개':'Google 동기화 완료 · '+new Date().toLocaleTimeString());
     }catch(error){if(epoch===generation){problem=true;status(error.message);if(error.status===401){token=null;expires=0;}}}
     finally{if(epoch===generation)setBusy(false);}
   }
@@ -81,7 +81,7 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
   };
   el('gcDefault').onchange=()=>{mutate(data=>{data.googleCalendar={...config(),defaultSend:el('gcDefault').checked};});};
   el('gcSync').onclick=()=>{problem=false;return run();};
-  function reset(){generation++;token=null;expires=0;owner=null;clearTimeout(timer);busy=false;problem=false;issues=[];extras=[];calendars=[];el('gcCalendar').innerHTML='<option value="">연결 후 선택</option>';setBusy(false);status('이 기기 연결 해제됨 · 기록과 Google 일정은 유지됩니다.');draw();}
+  function reset(){generation++;token=null;expires=0;owner=null;clearTimeout(timer);busy=false;problem=false;issues=[];extras=[];onExtras([]);calendars=[];el('gcCalendar').innerHTML='<option value="">연결 후 선택</option>';setBusy(false);status('이 기기 연결 해제됨 · 기록과 Google 일정은 유지됩니다.');draw();}
   el('gcDisconnect').onclick=reset;
   const interval=setInterval(()=>{if(document.visibilityState==='visible')run();},60000);
   window.addEventListener('pagehide',()=>clearInterval(interval),{once:true});

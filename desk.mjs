@@ -1,7 +1,7 @@
 import {dateKey,validDate,shiftDay,mondayOf} from './shared/dates.mjs';
 import {parseRoute,journalViews} from './shared/navigation.mjs';
-const $=id=>document.getElementById(id),modules=['journal','routine','spending'];
-const labels={today:['Today','Your daily log, with the week and month alongside.'],journal:['Journal','Your complete notebook. Eight views, the same records.'],routine:['Routine','Exercise, meals and sleep. Plan it, then log it.'],spending:['Spending','Transactions, budgets and the month in view.'],settings:['Settings','Connections, storage and backups.']};
+const $=id=>document.getElementById(id),modules=['journal','routine'];
+const labels={today:['Today','Your daily log, with the week and month alongside.'],journal:['Journal','Your complete notebook. Eight views, the same records.'],routine:['Routine','Exercise, meals and sleep. Plan it, then log it.'],settings:['Settings','Connections, storage and backups.']};
 let selected=dateKey(),view='today',journalTab='daily',pendingAction=null,routineInteractive=false,lastRoutine=null;
 const ready=new Set();
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7);}
@@ -12,7 +12,6 @@ function setDate(value){
  $('period').textContent=date.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
  $('footer-date').textContent=value.replaceAll('-',' / ');
  $('stamp-month').textContent=date.toLocaleDateString('en-GB',{month:'short'}).toUpperCase();$('stamp-day').textContent=date.getDate();$('stamp-weekday').textContent=date.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase();
- $('spending-label').textContent=date.toLocaleDateString('en-GB',{month:'long'})+' · Spending';
  $('big-date').textContent=String(date.getMonth()+1).padStart(2,'0')+'.'+String(date.getDate()).padStart(2,'0');$('big-weekday').textContent=date.toLocaleDateString('en-GB',{weekday:'long'}).toUpperCase();$('big-week').textContent=date.getFullYear()+' · Week '+isoWeek(date);
  $('week-strip').replaceChildren();
  for(let i=0;i<7;i++){const key=shiftDay(mondayOf(value),i),day=new Date(key+'T12:00:00'),button=document.createElement('button');button.type='button';button.setAttribute('aria-label',day.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));button.setAttribute('aria-pressed',String(key===selected));const label=document.createElement('span'),num=document.createElement('b');label.textContent=day.toLocaleDateString('en-GB',{weekday:'short'}).slice(0,2).toUpperCase();num.textContent=day.getDate();button.append(label,num);button.onclick=()=>setDate(key);$('week-strip').append(button);}
@@ -31,11 +30,11 @@ function route(){
  const route=parseRoute(location.hash);view=route.view;journalTab=route.tab;
  document.body.dataset.view=view;document.title=labels[view][0]+' · Personal desk';
  $('title').replaceChildren(document.createTextNode(labels[view][0]));const dot=document.createElement('span');dot.className='title-dot';dot.textContent='.';$('title').append(dot);$('subtitle').textContent=labels[view][1];updateNavigation();
- $('period').textContent=view==='spending'?'MONTHLY OVERVIEW':new Date(selected+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
+ $('period').textContent=new Date(selected+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
  $('today-layout').hidden=!['today','journal'].includes(view);$('today-layout').classList.toggle('full',view==='journal');$('overview').hidden=view!=='today';
- for(const m of ['routine','spending','settings'])$(m+'-panel').hidden=view!==m;
- if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261025';
- send('journal');send('spending');send('routine',view==='routine'&&routineInteractive?pendingAction:undefined);
+ for(const m of ['routine','settings'])$(m+'-panel').hidden=view!==m;
+ if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261025b';
+ send('journal');send('routine',view==='routine'&&routineInteractive?pendingAction:undefined);
  if(view==='routine'&&routineInteractive)pendingAction=null;
 }
 window.addEventListener('message',event=>{
@@ -49,14 +48,11 @@ window.addEventListener('message',event=>{
  }
  if(d.type==='signedout'){routineInteractive=false;lastRoutine=null;$('routine-value').textContent='—';$('routine-note').textContent='Connect Routine to see your logged activity.';}
  if(d.type==='busy'){$('notice').textContent='A Routine editor is open. Save or close it before changing the date.';$('notice').hidden=false;}
- if(d.type==='summary'&&d.module==='spending'&&d.month===selected.slice(0,7)){
-  const has=d.count>0;$('spending-value').textContent=has?d.currency+Number(d.total).toLocaleString('en-GB',{maximumFractionDigits:2}):'—';$('spending-note').textContent=has?d.count+' imported transactions':'No transactions for this month.';
-  $('budget-fill').style.width=d.budget>0?Math.min(100,d.total/d.budget*100)+'%':'0%';$('budget-note').textContent=d.budget>0?'BUDGET '+d.currency+Number(d.budget).toLocaleString('en-GB'):'NO BUDGET SET';
- }
  if(d.type==='summary'&&d.module==='routine'&&d.ready&&d.week===mondayOf(selected)){lastRoutine=d;$('routine-value').replaceChildren(document.createTextNode(d.minutes+' '));const unit=document.createElement('small');unit.textContent='min';$('routine-value').append(unit);$('routine-note').textContent='Logged aerobic activity this week.';}
 });
 $('previous').onclick=()=>setDate(shiftDay(selected,-1));$('next').onclick=()=>setDate(shiftDay(selected,1));$('now').onclick=()=>setDate(dateKey());$('date').onchange=e=>setDate(e.target.value);
 document.querySelectorAll('[data-action]').forEach(button=>button.onclick=()=>{pendingAction=button.dataset.action;location.hash='routine';if(view==='routine')route();});
 $('journal-retry').onclick=()=>{$('journal-frame').src='./modules/journal/index.html';$('journal-fallback').hidden=true;};
 setTimeout(()=>{if(!ready.has('journal')){$('journal-loading').hidden=true;$('journal-fallback').hidden=false;}},12000);
+try{const old=localStorage.getItem('personal_desk_spending_v1');if(old){$('old-spending').hidden=false;$('spending-export').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([old],{type:'application/json'}));a.download='spending-backup-'+dateKey()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};}}catch{}
 window.addEventListener('hashchange',route);setDate(selected);route();

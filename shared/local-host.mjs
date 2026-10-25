@@ -14,8 +14,8 @@ if(typeof window!=='undefined'&&window===window.top&&location.hostname==='127.0.
  else {
   const show=()=>{
    const banner=document.createElement('section');banner.className='host-notice';banner.setAttribute('role','alert');
-   const text=document.createElement('p');text.textContent='Google sign-in works at localhost. This address has local records: export your Spending backup and sync any Journal drafts before switching. Records stay on this address until you restore them at localhost.';
-   const backup=document.createElement('a');backup.href='#spending';backup.textContent='Open Spending backup';
+   const text=document.createElement('p');text.textContent='Google sign-in works at localhost. This address has local records: sync any Journal drafts or download the old Spending backup in Settings before switching. Records stay on this address until you restore them at localhost.';
+   const backup=document.createElement('a');backup.href='#settings';backup.textContent='Open Settings';
    const open=document.createElement('a');open.href=target.href;open.target='_blank';open.rel='noopener';open.textContent='Open localhost ↗';
    banner.append(text,backup,open);document.querySelector('main')?.prepend(banner);
   };
