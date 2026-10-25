@@ -55,6 +55,7 @@ export function validateJournal(data) {
   if(data.googleCalendar!==undefined){
     const g=data.googleCalendar;
     if(!object(g)||(g.calendar!==undefined&&typeof g.calendar!=='string')||(g.defaultSend!==undefined&&typeof g.defaultSend!=='boolean'))throw new Error('캘린더 설정 형식 오류');
+    if(g.hidden!==undefined&&(!Array.isArray(g.hidden)||!g.hidden.every(x=>typeof x==='string')))throw new Error('캘린더 표시 설정 오류');
     if(g.zone!==undefined){if(typeof g.zone!=='string')throw new Error('캘린더 시간대 오류');new Intl.DateTimeFormat('en',{timeZone:g.zone});}
   }
   for (const key of ['lists','days','months','sched','notes','habit','habitLog','journal','reflections','photos','routes','cal','cal2','future']) {

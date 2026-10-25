@@ -249,8 +249,8 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261025d">
-<link rel="stylesheet" href="./redesign.css?v=20261025d">
+<link rel="stylesheet" href="./desk.css?v=20261025e">
+<link rel="stylesheet" href="./redesign.css?v=20261025e">
 </head>
 <body>
 <div class="book">
@@ -314,29 +314,12 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 <div class="schedule-scroll" id="weeklySchedule" tabindex="0" aria-label="주간 시간표, 좁은 화면에서는 가로로 스크롤"></div>
 </section>
 <section class="panel" id="monthly">
-<div class="mtitle-row"><button class="navbtn" id="monPrev" type="button" aria-label="Previous month">‹</button><div class="ph" id="monthTitle">Monthly Log</div><button class="navbtn" id="monNext" type="button" aria-label="Next month">›</button><button class="navbtn" id="monToday" type="button">This month</button><button class="navbtn gc-chip" id="monGoogle" type="button">Connect Google Calendar</button></div>
+<div class="mtitle-row"><button class="navbtn" id="monPrev" type="button" aria-label="Previous month">‹</button><div class="ph" id="monthTitle">Monthly Log</div><button class="navbtn" id="monNext" type="button" aria-label="Next month">›</button><button class="navbtn" id="monToday" type="button">This month</button><button class="navbtn gc-chip" id="monGoogle" type="button">Connect Google Calendar</button><details class="gc-filter" id="gcFilter" hidden><summary class="navbtn">Calendars</summary><div class="gc-filter-panel" id="gcFilterList"></div></details></div>
 <hr class="rule">
 <div class="month-layout">
 <div class="month-cal"><div class="month-grid" id="monthGrid" role="grid" aria-label="Month calendar"></div><p class="hint month-foot" id="monthFoot"></p></div>
-<aside class="month-memo" aria-label="Memo">
-<div class="memo-head">Memo</div>
-<div class="sub">Tasks this month</div>
-<ul class="log" data-list="monthly"></ul>
-<div class="adder">
-<button class="typebtn sel" data-type="task" data-for="monthly" aria-label="Task">&bull;</button>
-<button class="typebtn" data-type="event" data-for="monthly" aria-label="Event">&#9675;</button>
-<button class="typebtn" data-type="note" data-for="monthly" aria-label="Note">&ndash;</button>
-<input data-input="monthly" aria-label="Add a monthly task" placeholder="Add a task…">
-</div>
-</aside>
 </div>
 <details class="fold" id="monthLinesFold"><summary>One line a day</summary><p class="hint">Write a short line for each day. It shows in the calendar above.</p><ul class="cal" id="calList"></ul></details>
-<details class="fold" id="habitFold"><summary>Habit tracker</summary>
-<div class="trk-head"><button class="navbtn" id="trkPrev" type="button">‹</button><div class="ph" id="trackerTitle">Tracker</div><button class="navbtn" id="trkNext" type="button">›</button><button class="navbtn" id="trkToday" type="button">This month</button></div>
-<p class="hint">Fill a dot for each day you complete a habit. Today’s habits are also on the Today page.</p>
-<div class="hwrap"><table class="htable" id="habitTable"></table></div>
-<div class="habit-edit"><h5>Edit habits</h5><div id="habitEditList"></div><button class="he-add" id="habitAdd">+ Add habit</button></div>
-</details>
 <details class="fold" id="gcEmbedFold"><summary>Google Calendar</summary><p class="hint">Your Google Calendar as Google shows it. You need to be signed in to Google in this browser. Two-way sync of schedule blocks is set up in “Google Calendar 연동” at the top of the notebook.</p><div id="gcEmbed"></div></details>
 <details class="fold" id="monthlyRouteFold"><summary id="monthlyRouteTitle">Places this month</summary><div id="monthlyRoutes"></div></details>
 </section>
@@ -633,7 +616,7 @@ function renderDaily(){
 }
 function renderMonthly(){
   document.getElementById('monthTitle').textContent=monthsK[viewMonth.m]+' '+viewMonth.y;
-  buildCal(); renderList('monthly'); buildMonthGrid(); loadMonthGoogle();
+  buildCal(); buildMonthGrid(); loadMonthGoogle();
   document.getElementById('calList').onchange=()=>buildMonthGrid();
   if(document.getElementById('gcEmbedFold').open)renderGoogleEmbed();
   updateMonthlyRouteTitle();
@@ -649,9 +632,9 @@ function localKeyOf(iso){const d=new Date(iso);return dayKey(d.getFullYear(),d.g
 /* Google events for a day: every calendar shown in Google when connected, otherwise the sync extras. Blocks already linked to the journal are not repeated. */
 function googleEventsOn(k){
   const linked=new Set(Object.values(db.sched||{}).flat().map(b=>b.gc?.eventId).filter(Boolean));
-  const source=gcMonth.state==='on'?gcMonth.events:gcExtras;
+  const source=gcMonth.state==='on'?gcMonth.events:gcExtras, hidden=new Set(db.googleCalendar?.hidden||[]);
   return source.filter(ev=>{
-    if(linked.has(ev.id))return false;
+    if(linked.has(ev.id)||(ev._cal&&hidden.has(ev._cal.id)))return false;
     if(ev.start?.date){const start=ev.start.date.slice(0,10),end=(ev.end?.date||ev.start.date).slice(0,10);return k>=start&&(k<end||start===end&&k===start);}
     return !!ev.start?.dateTime&&localKeyOf(ev.start.dateTime)===k;
   }).sort((a,b)=>(a.start?.date?0:1)-(b.start?.date?0:1)||String(a.start?.dateTime||'').localeCompare(String(b.start?.dateTime||'')));
@@ -674,8 +657,25 @@ async function loadMonthGoogle(force=false){
     if(key!==monKey(viewMonth.y,viewMonth.m))return;
     gcMonth.events=events||[];gcMonth.key=key;gcMonth.loaded=Date.now();gcMonth.state=events?'on':'off';
   }catch(error){gcMonth.state='error';gcMonth.error=error.message;console.error(error);}
-  updateGoogleChip();buildMonthGrid();
+  updateGoogleChip();buildGcFilter();buildMonthGrid();
 }
+/* Choose which Google calendars appear on Monthly. Saved with the journal so every device matches. */
+function buildGcFilter(){
+  const box=document.getElementById('gcFilter'), list=document.getElementById('gcFilterList'); if(!box||!list) return;
+  let cals=[]; try{cals=gcOn()?calendar.calendarList():[];}catch{}
+  box.hidden=!cals.length; list.textContent=''; if(!cals.length) return;
+  const hidden=new Set(db.googleCalendar?.hidden||[]);
+  const head=document.createElement('p'); head.className='gc-filter-head'; head.textContent='Show on Monthly'; list.append(head);
+  for(const c of cals){
+    const label=document.createElement('label'); label.className='gc-filter-row';
+    const box2=document.createElement('input'); box2.type='checkbox'; box2.checked=!hidden.has(c.id);
+    const dot=document.createElement('span'); dot.className='gc-dot'; dot.style.background=c.color;
+    const name=document.createElement('span'); name.textContent=c.summary+(c.primary?' (main)':'');
+    box2.onchange=()=>{ const set=new Set(db.googleCalendar?.hidden||[]); if(box2.checked) set.delete(c.id); else set.add(c.id); db.googleCalendar={...(db.googleCalendar||{}),hidden:[...set]}; save(); buildMonthGrid(); };
+    label.append(box2,dot,name); list.append(label);
+  }
+}
+document.addEventListener('click',e=>{const f=document.getElementById('gcFilter');if(f?.open&&!f.contains(e.target))f.open=false;});
 document.getElementById('monGoogle').onclick=()=>{ if(gcOn())loadMonthGoogle(true); else { document.querySelector('#googleCalendarPanel details').open=true; calendar.connect(); } };
 const photoLoads={};
 function loadPhoto(id){
@@ -1035,7 +1035,7 @@ function buildCal(){ const y=viewMonth.y, m=viewMonth.m; const days=new Date(y,m
 function buildFuture(){ const grid=document.getElementById('futureGrid'); grid.innerHTML=''; const startAbs=viewFuture.y*12+viewFuture.m; for(let k=0;k<6;k++){ const abs=startAbs+k, yy=Math.floor(abs/12), mi=abs%12; const box=document.createElement('div'); box.className='fbox'; const h=document.createElement('h4'); h.textContent=monthsK[mi]+' '+yy; const ta=document.createElement('textarea'); ta.className='note'; ta.style.minHeight='70px'; const key='f'+yy+'-'+mi; ta.value=db.future[key]||''; ta.oninput=()=>{ if(ta.value) db.future[key]=ta.value; else delete db.future[key]; save(); }; box.append(h,ta); grid.appendChild(box); } const eAbs=startAbs+5, ey=Math.floor(eAbs/12), em=eAbs%12; document.getElementById('futureTitle').textContent=viewFuture.y+' '+monthsK[viewFuture.m]+' – '+(ey!==viewFuture.y?ey+'년 ':'')+monthsK[em]; }
 function shiftFuture(delta){ let abs=viewFuture.y*12+viewFuture.m+delta*6; viewFuture={y:Math.floor(abs/12),m:((abs%12)+12)%12}; buildFuture(); }
 function habitLogKey(y,m,d,hid){ return dayKey(y,m,d)+'|'+hid; }
-function buildHabit(){ const y=viewHabit.y, m=viewHabit.m; document.getElementById('trackerTitle').textContent=y+' '+monthsK[m]+' · Tracker'; const habits=db.habits; const days=new Date(y,m+1,0).getDate(); const t=document.getElementById('habitTable'); let head='<thead><tr><th></th>'+habits.map(hb=>'<th>'+esc(hb.name)+'</th>').join('')+'</tr></thead>'; let body='<tbody>'; for(let d=1;d<=days;d++){ const isT=(y===Y&&m===M&&d===D); body+='<tr'+(isT?' style="background:rgba(168,68,58,.08)"':'')+'><td class="d">'+d+'</td>'; for(const hb of habits){ const key=habitLogKey(y,m,d,hb.id); const on=db.habitLog[key]?' on':''; body+='<td><button type="button" class="hdot'+on+'" data-k="'+key+'" aria-label="'+(m+1)+'월 '+d+'일 '+esc(hb.name)+'" aria-pressed="'+!!on+'"></button></td>'; } body+='</tr>'; } body+='</tbody>'; t.innerHTML=head+body; t.querySelectorAll('.hdot').forEach(dot=>dot.onclick=()=>{ const k=dot.dataset.k; if(db.habitLog[k]) delete db.habitLog[k]; else db.habitLog[k]=true; dot.classList.toggle('on'); dot.setAttribute('aria-pressed',String(!!db.habitLog[k])); save(); }); buildHabitEdit(); }
+function buildHabit(){ if(!document.getElementById('habitTable')) return; const y=viewHabit.y, m=viewHabit.m; document.getElementById('trackerTitle').textContent=y+' '+monthsK[m]+' · Tracker'; const habits=db.habits; const days=new Date(y,m+1,0).getDate(); const t=document.getElementById('habitTable'); let head='<thead><tr><th></th>'+habits.map(hb=>'<th>'+esc(hb.name)+'</th>').join('')+'</tr></thead>'; let body='<tbody>'; for(let d=1;d<=days;d++){ const isT=(y===Y&&m===M&&d===D); body+='<tr'+(isT?' style="background:rgba(168,68,58,.08)"':'')+'><td class="d">'+d+'</td>'; for(const hb of habits){ const key=habitLogKey(y,m,d,hb.id); const on=db.habitLog[key]?' on':''; body+='<td><button type="button" class="hdot'+on+'" data-k="'+key+'" aria-label="'+(m+1)+'월 '+d+'일 '+esc(hb.name)+'" aria-pressed="'+!!on+'"></button></td>'; } body+='</tr>'; } body+='</tbody>'; t.innerHTML=head+body; t.querySelectorAll('.hdot').forEach(dot=>dot.onclick=()=>{ const k=dot.dataset.k; if(db.habitLog[k]) delete db.habitLog[k]; else db.habitLog[k]=true; dot.classList.toggle('on'); dot.setAttribute('aria-pressed',String(!!db.habitLog[k])); save(); }); buildHabitEdit(); }
 function buildHabitEdit(){ const host=document.getElementById('habitEditList'); if(!host) return; host.innerHTML=''; db.habits.forEach((hb,i)=>{ const row=document.createElement('div'); row.className='he-row'; const inp=document.createElement('input'); inp.value=hb.name; inp.oninput=()=>{hb.name=inp.value;save();}; inp.onchange=()=>buildHabit(); const del=document.createElement('button'); del.textContent='×'; del.title='삭제'; del.onclick=()=>{ if(confirm('"'+hb.name+'" 항목을 삭제할까요? (이 항목의 체크 기록도 사라져요)')){ db.habits.splice(i,1); save(); buildHabit(); } }; row.append(inp,del); host.appendChild(row); }); }
 function shiftHabit(delta){ let m=viewHabit.m+delta, y=viewHabit.y; while(m<0){m+=12;y--;} while(m>11){m-=12;y++;} viewHabit={y,m}; buildHabit(); }
 
@@ -1215,10 +1215,10 @@ document.getElementById('jToday').onclick=()=>selectJournalDate(new Date());
 document.getElementById('futPrev').onclick=()=>shiftFuture(-1);
 document.getElementById('futNext').onclick=()=>shiftFuture(1);
 document.getElementById('futToday').onclick=()=>{ viewFuture={y:Y,m:M}; buildFuture(); };
-document.getElementById('trkPrev').onclick=()=>shiftHabit(-1);
-document.getElementById('trkNext').onclick=()=>shiftHabit(1);
-document.getElementById('trkToday').onclick=()=>{ viewHabit={y:Y,m:M}; buildHabit(); };
-document.getElementById('habitAdd').onclick=()=>{ db.habits.push({id:genId(),name:'새 습관'}); save(); buildHabit(); };
+{const el=document.getElementById('trkPrev');if(el)el.onclick=()=>shiftHabit(-1);}
+{const el=document.getElementById('trkNext');if(el)el.onclick=()=>shiftHabit(1);}
+{const el=document.getElementById('trkToday');if(el)el.onclick=()=>{ viewHabit={y:Y,m:M}; buildHabit(); };}
+{const el=document.getElementById('habitAdd');if(el)el.onclick=()=>{ db.habits.push({id:genId(),name:'새 습관'}); save(); buildHabit(); };}
 document.getElementById('exportPdf').onclick=exportPDF;
 document.getElementById('lightbox').onclick=function(){ this.style.display='none'; };
 function downloadJSON(value,name) {
@@ -1292,7 +1292,7 @@ document.getElementById('reset').onclick=() => {
 // Reuses the existing Firebase OAuth client: no client secret or token in GitHub/Firestore.
 const calendar=installCalendar({
   getData:()=>db,getUid:()=>uid,ready:()=>!!uid&&!!sync?.isReady()&&!sync?.getConflict(),
-  mutate:fn=>{fn(db);sync?.edit(db);},persist:()=>cloudSave(),render:()=>{refreshSchedules();},onExtras:list=>{gcExtras=list||[];buildMonthGrid();},onConnected:on=>{if(on)loadMonthGoogle(true);else{gcMonth.state='off';gcMonth.events=[];gcMonth.key='';updateGoogleChip();buildMonthGrid();}},
+  mutate:fn=>{fn(db);sync?.edit(db);},persist:()=>cloudSave(),render:()=>{refreshSchedules();},onExtras:list=>{gcExtras=list||[];buildMonthGrid();},onConnected:on=>{if(on)loadMonthGoogle(true);else{gcMonth.state='off';gcMonth.events=[];gcMonth.key='';updateGoogleChip();buildGcFilter();buildMonthGrid();}},
   authorize:async scopes=>{
     if(!auth.currentUser)throw new Error('먼저 로그인해 주세요.');
     const provider=new GoogleAuthProvider();scopes.forEach(scope=>provider.addScope(scope));
@@ -1316,7 +1316,6 @@ function applyDeskContext(ctx){
  document.body.classList.toggle('desk-today',ctx.view==='today');
  const wantsHabit=ctx.view!=='today'&&ctx.action==='habit';
  const tab=ctx.view==='today'?'daily':wantsHabit?'monthly':(['daily','weekly','monthly','future','journal','index','key'].includes(ctx.action)?ctx.action:'daily');
- if(wantsHabit)document.getElementById('habitFold').open=true;
  document.querySelectorAll('[data-p]').forEach(el=>{el.classList.toggle('active',el.dataset.p===tab);el.setAttribute('aria-pressed',String(el.dataset.p===tab));});
  if(!sync?.isReady()){deskContext=ctx;return;}
  const date=new Date(ctx.date+'T12:00:00');

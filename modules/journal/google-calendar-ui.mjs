@@ -118,6 +118,6 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
     if(failed.length===results.length&&failed.length)throw failed[0].reason;
     return results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
   }
-  return {reset,draw,run,beforeSave,monthEvents,connected:()=>!!connected(),connect:()=>el('gcConnect').click(),isBusy:()=>busy,defaultSend:()=>!!config().calendar&&!!config().defaultSend,
+  return {reset,draw,run,beforeSave,monthEvents,connected:()=>!!connected(),calendarList:()=>allCalendars.filter(c=>c.selected!==false&&c.accessRole!=='freeBusyReader').map(c=>({id:c.id,summary:c.summaryOverride||c.summary,color:c.backgroundColor||'#6B6B67',primary:!!c.primary})),connect:()=>el('gcConnect').click(),isBusy:()=>busy,defaultSend:()=>!!config().calendar&&!!config().defaultSend,
     changed(){draw();clearTimeout(timer);if(connected())timer=setTimeout(run,2000);}};
 }
