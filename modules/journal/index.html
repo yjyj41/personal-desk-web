@@ -249,8 +249,8 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261025c">
-<link rel="stylesheet" href="./redesign.css?v=20261025c">
+<link rel="stylesheet" href="./desk.css?v=20261025d">
+<link rel="stylesheet" href="./redesign.css?v=20261025d">
 </head>
 <body>
 <div class="book">
@@ -1296,7 +1296,7 @@ const calendar=installCalendar({
   authorize:async scopes=>{
     if(!auth.currentUser)throw new Error('먼저 로그인해 주세요.');
     const provider=new GoogleAuthProvider();scopes.forEach(scope=>provider.addScope(scope));
-    provider.setCustomParameters({login_hint:auth.currentUser.email,prompt:'consent'});
+    provider.setCustomParameters({login_hint:auth.currentUser.email});
     const result=await reauthenticateWithPopup(auth.currentUser,provider);
     const token=GoogleAuthProvider.credentialFromResult(result)?.accessToken;
     if(!token)throw new Error('캘린더 권한을 승인해 주세요.');return token;
