@@ -3,8 +3,8 @@ import {SCOPES,copy,same,createCalendarAPI,reconcile,instant,importable,fingerpr
 export function installCalendar({getData,mutate,persist,ready,getUid,authorize,render,range,onExtras=()=>{},onConnected=()=>{}}){
   let token=null,expires=0,owner=null,generation=0,timer,busy=false,problem=false,issues=[],extras=[],calendars=[],allCalendars=[];
   const host=document.getElementById('googleCalendarPanel');
-  host.innerHTML=`<details class="fold"><summary>Google Calendar 연동</summary>
-    <p class="hint">연결한 캘린더의 일정을 가져오고, ‘Google에 표시’를 켠 시간별 기록만 보냅니다. 할 일·일기·사진은 보내지 않습니다.</p>
+  host.innerHTML=`<details class="fold gc-sync"><summary>Google sync settings</summary>
+    <p class="hint">Monthly에 일정을 보여 주는 데는 이 설정이 필요 없어요. 여기서는 시간표 블록을 Google 캘린더 한 곳과 주고받는 고급 기능만 다룹니다. 할 일·일기·사진은 보내지 않습니다.</p>
     <div class="backup-actions" style="justify-content:flex-start"><button type="button" class="authbtn" id="gcConnect">Google 연결 / 재인증</button><button type="button" class="authbtn" id="gcSync">지금 동기화</button><button type="button" class="authbtn" id="gcDisconnect">이 기기 연결 해제</button></div>
     <label class="schedule-field">연결할 캘린더<select id="gcCalendar"><option value="">연결 후 선택</option></select></label>
     <label class="schedule-field">시간대<input id="gcZone" readonly></label>

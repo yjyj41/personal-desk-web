@@ -249,8 +249,8 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261025e">
-<link rel="stylesheet" href="./redesign.css?v=20261025e">
+<link rel="stylesheet" href="./desk.css?v=20261025f">
+<link rel="stylesheet" href="./redesign.css?v=20261025f">
 </head>
 <body>
 <div class="book">
@@ -279,7 +279,6 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 <button class="authbtn" id="gateSignIn">Continue with Google <span aria-hidden="true">↗</span></button><p id="authError" class="load-error" role="alert" hidden></p><p class="load-error" id="loadError" hidden>Could not load your records. Check your connection and try again.</p><button class="authbtn" id="retryLoad" hidden>Reload records</button>
 </div>
 <div id="appBody" style="display:none">
-<div id="googleCalendarPanel"></div>
 
 <section class="panel active" id="daily">
 <div class="today-head"><div class="ph" id="dailyDate">Daily log</div><div class="day-controls"><button class="navbtn" id="dayPrev" aria-label="Previous day">‹</button><input id="dayPicker" type="date" aria-label="Log date"><button class="navbtn" id="dayNext" aria-label="Next day">›</button><button class="navbtn" id="dayToday">Today</button></div></div>
@@ -314,12 +313,13 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 <div class="schedule-scroll" id="weeklySchedule" tabindex="0" aria-label="주간 시간표, 좁은 화면에서는 가로로 스크롤"></div>
 </section>
 <section class="panel" id="monthly">
-<div class="mtitle-row"><button class="navbtn" id="monPrev" type="button" aria-label="Previous month">‹</button><div class="ph" id="monthTitle">Monthly Log</div><button class="navbtn" id="monNext" type="button" aria-label="Next month">›</button><button class="navbtn" id="monToday" type="button">This month</button><button class="navbtn gc-chip" id="monGoogle" type="button">Connect Google Calendar</button><details class="gc-filter" id="gcFilter" hidden><summary class="navbtn">Calendars</summary><div class="gc-filter-panel" id="gcFilterList"></div></details></div>
+<div class="mtitle-row"><button class="navbtn" id="monPrev" type="button" aria-label="Previous month">‹</button><div class="ph" id="monthTitle">Monthly Log</div><button class="navbtn" id="monNext" type="button" aria-label="Next month">›</button><button class="navbtn" id="monToday" type="button">This month</button><button class="navbtn gc-chip" id="monGoogle" type="button">Connect Google Calendar</button><details class="gc-filter" id="gcFilter" hidden><summary class="navbtn">Calendars ▾</summary><div class="gc-filter-panel" id="gcFilterList"></div></details></div>
 <hr class="rule">
 <div class="month-layout">
 <div class="month-cal"><div class="month-grid" id="monthGrid" role="grid" aria-label="Month calendar"></div><p class="hint month-foot" id="monthFoot"></p></div>
 </div>
 <details class="fold" id="monthLinesFold"><summary>One line a day</summary><p class="hint">Write a short line for each day. It shows in the calendar above.</p><ul class="cal" id="calList"></ul></details>
+<div id="googleCalendarPanel"></div>
 <details class="fold" id="gcEmbedFold"><summary>Google Calendar</summary><p class="hint">Your Google Calendar as Google shows it. You need to be signed in to Google in this browser. Two-way sync of schedule blocks is set up in “Google Calendar 연동” at the top of the notebook.</p><div id="gcEmbed"></div></details>
 <details class="fold" id="monthlyRouteFold"><summary id="monthlyRouteTitle">Places this month</summary><div id="monthlyRoutes"></div></details>
 </section>
@@ -674,9 +674,12 @@ function buildGcFilter(){
     box2.onchange=()=>{ const set=new Set(db.googleCalendar?.hidden||[]); if(box2.checked) set.delete(c.id); else set.add(c.id); db.googleCalendar={...(db.googleCalendar||{}),hidden:[...set]}; save(); buildMonthGrid(); };
     label.append(box2,dot,name); list.append(label);
   }
+  const more=document.createElement('button'); more.type='button'; more.className='gc-filter-more'; more.textContent='Sync settings…';
+  more.onclick=()=>{ document.getElementById('gcFilter').open=false; const d=document.querySelector('#googleCalendarPanel details'); if(d){ d.open=true; d.scrollIntoView({behavior:'smooth',block:'start'}); } };
+  list.append(more);
 }
 document.addEventListener('click',e=>{const f=document.getElementById('gcFilter');if(f?.open&&!f.contains(e.target))f.open=false;});
-document.getElementById('monGoogle').onclick=()=>{ if(gcOn())loadMonthGoogle(true); else { document.querySelector('#googleCalendarPanel details').open=true; calendar.connect(); } };
+document.getElementById('monGoogle').onclick=()=>{ if(gcOn())loadMonthGoogle(true); else calendar.connect(); };
 const photoLoads={};
 function loadPhoto(id){
   if(photoCache[id])return Promise.resolve(photoCache[id]);
