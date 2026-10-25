@@ -1,7 +1,7 @@
 import {SCOPES,copy,same,createCalendarAPI,reconcile,instant,importable,fingerprint,exportEventId} from './google-calendar.mjs';
 
-export function installCalendar({getData,mutate,persist,ready,getUid,authorize,render,range,onExtras=()=>{}}){
-  let token=null,expires=0,owner=null,generation=0,timer,busy=false,problem=false,issues=[],extras=[],calendars=[];
+export function installCalendar({getData,mutate,persist,ready,getUid,authorize,render,range,onExtras=()=>{},onConnected=()=>{}}){
+  let token=null,expires=0,owner=null,generation=0,timer,busy=false,problem=false,issues=[],extras=[],calendars=[],allCalendars=[];
   const host=document.getElementById('googleCalendarPanel');
   host.innerHTML=`<details class="fold"><summary>Google Calendar 연동</summary>
     <p class="hint">연결한 캘린더의 일정을 가져오고, ‘Google에 표시’를 켠 시간별 기록만 보냅니다. 할 일·일기·사진은 보내지 않습니다.</p>
@@ -66,7 +66,7 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
   el('gcConnect').onclick=async()=>{
     if(!ready()){status('불렛저널 기록을 먼저 불러와야 합니다. 상단 저장 상태나 기록 충돌을 확인해 주세요.');return;}problem=false;setBusy(true);status('Google 권한 확인 중…');const epoch=generation;
     try{const result=await authorize(SCOPES);if(epoch!==generation)return;token=result;expires=Date.now()+50*60*1000;owner=getUid();
-      calendars=(await api.calendars()).filter(c=>['owner','writer'].includes(c.accessRole));
+      allCalendars=await api.calendars();calendars=allCalendars.filter(c=>['owner','writer'].includes(c.accessRole));onConnected(true);
       if(epoch!==generation)return;
       el('gcCalendar').textContent='';const blank=document.createElement('option');blank.value='';blank.textContent='캘린더를 선택하세요';el('gcCalendar').append(blank);
       for(const c of calendars){const option=document.createElement('option');option.value=c.id;option.textContent=c.summary+(c.primary?' (기본)':'');el('gcCalendar').append(option);}
@@ -81,7 +81,7 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
   };
   el('gcDefault').onchange=()=>{mutate(data=>{data.googleCalendar={...config(),defaultSend:el('gcDefault').checked};});};
   el('gcSync').onclick=()=>{problem=false;return run();};
-  function reset(){generation++;token=null;expires=0;owner=null;clearTimeout(timer);busy=false;problem=false;issues=[];extras=[];onExtras([]);calendars=[];el('gcCalendar').innerHTML='<option value="">연결 후 선택</option>';setBusy(false);status('이 기기 연결 해제됨 · 기록과 Google 일정은 유지됩니다.');draw();}
+  function reset(){generation++;token=null;expires=0;owner=null;clearTimeout(timer);busy=false;problem=false;issues=[];extras=[];onExtras([]);onConnected(false);calendars=[];allCalendars=[];el('gcCalendar').innerHTML='<option value="">연결 후 선택</option>';setBusy(false);status('이 기기 연결 해제됨 · 기록과 Google 일정은 유지됩니다.');draw();}
   el('gcDisconnect').onclick=reset;
   const interval=setInterval(()=>{if(document.visibilityState==='visible')run();},60000);
   window.addEventListener('pagehide',()=>clearInterval(interval),{once:true});
@@ -108,6 +108,16 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
       }finally{if(epoch===generation)setBusy(false);}
     }return true;
   }
-  return {reset,draw,run,beforeSave,isBusy:()=>busy,defaultSend:()=>!!config().calendar&&!!config().defaultSend,
+  // Read-only view of every calendar shown in Google Calendar, for the Monthly page.
+  async function monthEvents(startKey,endKey){
+    if(!connected())return null;
+    const zone=Intl.DateTimeFormat().resolvedOptions().timeZone,min=instant(startKey,0,zone),max=instant(endKey,0,zone);
+    const shown=allCalendars.filter(c=>c.selected!==false&&c.accessRole!=='freeBusyReader');
+    const results=await Promise.allSettled(shown.map(c=>api.events(c.id,min,max).then(items=>items.filter(e=>e.status!=='cancelled').map(e=>({...e,_cal:{id:c.id,summary:c.summaryOverride||c.summary,color:c.backgroundColor||'#6B6B67'}})))));
+    const failed=results.filter(r=>r.status==='rejected');
+    if(failed.length===results.length&&failed.length)throw failed[0].reason;
+    return results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
+  }
+  return {reset,draw,run,beforeSave,monthEvents,connected:()=>!!connected(),connect:()=>el('gcConnect').click(),isBusy:()=>busy,defaultSend:()=>!!config().calendar&&!!config().defaultSend,
     changed(){draw();clearTimeout(timer);if(connected())timer=setTimeout(run,2000);}};
 }

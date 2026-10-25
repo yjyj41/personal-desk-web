@@ -240,3 +240,36 @@ html body #monthly .mtitle-row .ph{min-width:0;margin-right:auto;order:-1}
  .mg-cell.photo-on .mg-lines{display:none}
  .gc-embed{height:480px}
 }
+
+/* Google events in the month grid + day detail (2026-10) */
+.gc-chip{white-space:nowrap}
+.gc-chip.on{background:var(--ink)!important;color:#fff!important;border-color:var(--ink)!important}
+.mg-line.gday{background:var(--gc,#6B6B67);color:#fff;border-radius:3px;padding:0 4px}
+.mg-line.gtime::before{content:'';display:inline-block;width:6px;height:6px;border-radius:3px;background:var(--gc,#6B6B67);margin-right:4px;vertical-align:1px}
+.mg-cell.photo-on .mg-line.gday{background:var(--gc,#6B6B67)}
+#dayDialog{width:min(560px,calc(100% - 24px))!important;padding:0!important}
+#dayDialog .dd-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:20px 22px 14px;border-bottom:2px solid var(--ink)}
+#dayDialog .dd-kicker{font-size:11px;letter-spacing:.14em;color:var(--ink-soft);margin:0 0 4px}
+#dayDialog h2{font-family:var(--serif);font-weight:400;font-size:30px;margin:0;line-height:1.1}
+#dayDialog .dd-close{width:40px;height:40px;border:1px solid var(--line);border-radius:10px;background:var(--card);font-size:20px;line-height:1;cursor:pointer}
+#dayDialogBody{padding:6px 22px 4px;max-height:60vh;overflow:auto}
+.dd-sec{padding:12px 0;border-bottom:1px solid var(--rule)}
+.dd-sec:last-child{border-bottom:0}
+.dd-sec h3{display:flex;justify-content:space-between;align-items:baseline;margin:0 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:500}
+.dd-sec h3 span{font-variant-numeric:tabular-nums}
+.dd-row{display:flex;align-items:baseline;gap:12px;padding:5px 0;font-size:14px}
+.dd-lead{flex:none;min-width:84px;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+.dd-text{flex:1;min-width:0;overflow-wrap:anywhere}
+.dd-text small{display:block;font-size:12px;color:var(--ink-soft);margin-top:1px}
+.dd-row.serif .dd-text{font-family:var(--serif);font-size:17px}
+.dd-row.google .dd-lead::before{content:'';display:inline-block;width:8px;height:8px;border-radius:4px;background:var(--gc,#6B6B67);margin-right:6px}
+.dd-row.s-done .dd-text,.dd-row.s-strike .dd-text{text-decoration:line-through;color:#8A8A86}
+.dd-link{flex:none;font-size:12px}
+.dd-chips{display:flex;flex-wrap:wrap;gap:6px}
+.dd-chips span{height:28px;display:inline-flex;align-items:center;padding:0 10px;border-radius:14px;background:var(--ink);color:#fff;font-size:12px}
+.dd-journal{margin:0;font-family:var(--serif);font-size:16px;line-height:1.55;white-space:pre-wrap}
+.dd-photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.dd-photo{aspect-ratio:1;border:1px solid var(--line);border-radius:10px;background:var(--paper2) center/cover no-repeat;cursor:zoom-in}
+.dd-empty{padding:18px 0;color:var(--ink-soft);margin:0}
+#dayDialog .dialog-actions{padding:12px 22px 18px;justify-content:flex-end;border-top:1px solid var(--rule)}
+@media(max-width:640px){#dayDialog{width:100%!important;max-width:100%!important;margin:auto 0 0!important;border-radius:16px 16px 0 0!important}#dayDialogBody{max-height:62vh}.dd-lead{min-width:64px}.mg-line.gday{padding:0 2px}}

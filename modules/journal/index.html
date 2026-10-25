@@ -249,8 +249,8 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261025b">
-<link rel="stylesheet" href="./redesign.css?v=20261025b">
+<link rel="stylesheet" href="./desk.css?v=20261025c">
+<link rel="stylesheet" href="./redesign.css?v=20261025c">
 </head>
 <body>
 <div class="book">
@@ -314,7 +314,7 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 <div class="schedule-scroll" id="weeklySchedule" tabindex="0" aria-label="주간 시간표, 좁은 화면에서는 가로로 스크롤"></div>
 </section>
 <section class="panel" id="monthly">
-<div class="mtitle-row"><button class="navbtn" id="monPrev" type="button" aria-label="Previous month">‹</button><div class="ph" id="monthTitle">Monthly Log</div><button class="navbtn" id="monNext" type="button" aria-label="Next month">›</button><button class="navbtn" id="monToday" type="button">This month</button></div>
+<div class="mtitle-row"><button class="navbtn" id="monPrev" type="button" aria-label="Previous month">‹</button><div class="ph" id="monthTitle">Monthly Log</div><button class="navbtn" id="monNext" type="button" aria-label="Next month">›</button><button class="navbtn" id="monToday" type="button">This month</button><button class="navbtn gc-chip" id="monGoogle" type="button">Connect Google Calendar</button></div>
 <hr class="rule">
 <div class="month-layout">
 <div class="month-cal"><div class="month-grid" id="monthGrid" role="grid" aria-label="Month calendar"></div><p class="hint month-foot" id="monthFoot"></p></div>
@@ -401,6 +401,7 @@ Synced to your account ·
 <p id="scheduleError" class="load-error" hidden></p><div class="dialog-actions"><button type="button" class="reset" id="scheduleDelete">Delete</button><button type="button" class="authbtn" id="scheduleCancel">Cancel</button><button type="submit" class="authbtn">Save</button></div>
 </form></dialog>
 <div id="printArea"></div>
+<dialog id="dayDialog" aria-labelledby="dayDialogTitle"><div class="dd-head"><div><p class="dd-kicker" id="dayDialogKicker"></p><h2 id="dayDialogTitle"></h2></div><button type="button" class="dd-close" id="dayDialogClose" aria-label="Close">×</button></div><div id="dayDialogBody"></div><div class="dialog-actions"><button type="button" class="reset" id="dayDialogJournal">Open journal</button><button type="button" class="authbtn" id="dayDialogOpen">Open this day</button></div></dialog>
 <div id="lightbox"><img alt="사진"></div>
 <input type="file" id="timelineInput" accept="application/json,.json" hidden>
 <script type="module">
@@ -632,7 +633,7 @@ function renderDaily(){
 }
 function renderMonthly(){
   document.getElementById('monthTitle').textContent=monthsK[viewMonth.m]+' '+viewMonth.y;
-  buildCal(); renderList('monthly'); buildMonthGrid();
+  buildCal(); renderList('monthly'); buildMonthGrid(); loadMonthGoogle();
   document.getElementById('calList').onchange=()=>buildMonthGrid();
   if(document.getElementById('gcEmbedFold').open)renderGoogleEmbed();
   updateMonthlyRouteTitle();
@@ -641,6 +642,41 @@ function renderMonthly(){
 function shiftMonth(delta){ let m=viewMonth.m+delta, y=viewMonth.y; while(m<0){m+=12;y--;} while(m>11){m-=12;y++;} viewMonth={y,m}; viewHabit={y,m}; renderMonthly(); buildHabit(); }
 /* Monthly calendar: one line, events, Google and schedule blocks, and the day's first photo. */
 let gcExtras=[];
+const gcMonth={key:'',events:[],loaded:0,state:'off',error:''};
+function gcOn(){try{return calendar.connected();}catch{return false;}}
+function hhmm(iso){const d=new Date(iso);return pad2(d.getHours())+':'+pad2(d.getMinutes());}
+function localKeyOf(iso){const d=new Date(iso);return dayKey(d.getFullYear(),d.getMonth(),d.getDate());}
+/* Google events for a day: every calendar shown in Google when connected, otherwise the sync extras. Blocks already linked to the journal are not repeated. */
+function googleEventsOn(k){
+  const linked=new Set(Object.values(db.sched||{}).flat().map(b=>b.gc?.eventId).filter(Boolean));
+  const source=gcMonth.state==='on'?gcMonth.events:gcExtras;
+  return source.filter(ev=>{
+    if(linked.has(ev.id))return false;
+    if(ev.start?.date){const start=ev.start.date.slice(0,10),end=(ev.end?.date||ev.start.date).slice(0,10);return k>=start&&(k<end||start===end&&k===start);}
+    return !!ev.start?.dateTime&&localKeyOf(ev.start.dateTime)===k;
+  }).sort((a,b)=>(a.start?.date?0:1)-(b.start?.date?0:1)||String(a.start?.dateTime||'').localeCompare(String(b.start?.dateTime||'')));
+}
+function updateGoogleChip(){
+  const chip=document.getElementById('monGoogle'); if(!chip) return;
+  const on=gcOn();
+  chip.classList.toggle('on',on&&gcMonth.state==='on');
+  chip.textContent=!on?'Connect Google Calendar':gcMonth.state==='loading'?'Google · loading…':gcMonth.state==='error'?'Google · retry':'Google · '+gcMonth.events.length+' events';
+  chip.title=gcMonth.error||(!on?'Show every Google calendar on this page. You need to connect once each visit.':'Refresh Google events');
+}
+async function loadMonthGoogle(force=false){
+  if(!gcOn()||!viewMonth){gcMonth.state='off';gcMonth.events=[];updateGoogleChip();return;}
+  const key=monKey(viewMonth.y,viewMonth.m);
+  if(!force&&gcMonth.key===key&&gcMonth.state==='on'&&Date.now()-gcMonth.loaded<60000)return;
+  gcMonth.state='loading';gcMonth.error='';updateGoogleChip();
+  const start=dayKey(viewMonth.y,viewMonth.m,1),endDate=new Date(viewMonth.y,viewMonth.m+1,1),end=dayKey(endDate.getFullYear(),endDate.getMonth(),1);
+  try{
+    const events=await calendar.monthEvents(start,end);
+    if(key!==monKey(viewMonth.y,viewMonth.m))return;
+    gcMonth.events=events||[];gcMonth.key=key;gcMonth.loaded=Date.now();gcMonth.state=events?'on':'off';
+  }catch(error){gcMonth.state='error';gcMonth.error=error.message;console.error(error);}
+  updateGoogleChip();buildMonthGrid();
+}
+document.getElementById('monGoogle').onclick=()=>{ if(gcOn())loadMonthGoogle(true); else { document.querySelector('#googleCalendarPanel details').open=true; calendar.connect(); } };
 const photoLoads={};
 function loadPhoto(id){
   if(photoCache[id])return Promise.resolve(photoCache[id]);
@@ -655,7 +691,7 @@ function dayLines(y,m,d){
   const one=db.cal2['c'+y+'-'+m+'-'+d]; if(one) lines.push({text:one,kind:'line'});
   for(const it of db.days[k]||[]) if(it.type==='event') lines.push({text:'○ '+it.text,kind:'event',done:it.status==='done'});
   for(const bk of (db.sched[k]||[]).slice().sort((a,b)=>a.s-b.s)) if(scheduleKind(bk)==='plan'||bk.gc) lines.push({text:slotTime(bk.s)+' '+(bk.text||''),kind:bk.gc?'google':'plan'});
-  for(const ev of gcExtras){ const start=ev.start?.date||ev.start?.dateTime?.slice(0,10), end=ev.end?.date||ev.end?.dateTime?.slice(0,10)||start; if(!start)continue; const allDay=!!ev.start?.date; if(allDay?(k>=start&&k<end):k===start) lines.push({text:(ev.summary||'(제목 없음)'),kind:'google'}); }
+  for(const ev of googleEventsOn(k)) lines.push({text:(ev.start?.dateTime?hhmm(ev.start.dateTime)+' ':'')+(ev.summary||'(제목 없음)'),kind:ev.start?.date?'gday':'gtime',color:ev._cal?.color});
   return lines;
 }
 function buildMonthGrid(){
@@ -677,10 +713,10 @@ function buildMonthGrid(){
       total+=lines.length;
       const cell=document.createElement('button'); cell.type='button'; cell.className='mg-cell'; cell.setAttribute('role','gridcell');
       if(y===Y&&m===M&&d===D) cell.classList.add('today');
-      cell.setAttribute('aria-label',(m+1)+'/'+d+(lines.length?' — '+lines.map(l=>l.text).join(', '):'')+(photos.length?' · 사진 '+photos.length+'장':'')+' · 이날 열기');
+      cell.setAttribute('aria-label',(m+1)+'/'+d+(lines.length?' — '+lines.map(l=>l.text).join(', '):'')+(photos.length?' · 사진 '+photos.length+'장':'')+' · 자세히 보기');
       const num=document.createElement('span'); num.className='mg-num'; num.textContent=d; cell.append(num);
       const list=document.createElement('span'); list.className='mg-lines';
-      lines.slice(0,3).forEach(l=>{const t=document.createElement('span');t.className='mg-line '+l.kind+(l.done?' done':'');t.textContent=l.text;list.append(t);});
+      lines.slice(0,3).forEach(l=>{const t=document.createElement('span');t.className='mg-line '+l.kind+(l.done?' done':'');t.textContent=l.text;if(l.color)t.style.setProperty('--gc',l.color);list.append(t);});
       if(lines.length>3){const more=document.createElement('span');more.className='mg-more';more.textContent='+'+(lines.length-3);list.append(more);}
       cell.append(list);
       if(photos.length){
@@ -688,13 +724,44 @@ function buildMonthGrid(){
         if(photos.length>1){const badge=document.createElement('span');badge.className='mg-count';badge.textContent=photos.length;cell.append(badge);}
         loadPhoto(photos[0]).then(data=>{ if(data&&epoch===authEpoch&&cell.isConnected){cell.style.backgroundImage='url("'+data+'")';cell.classList.add('photo-on');} });
       }
-      cell.onclick=()=>{ selectDay(new Date(y,m,d)); document.querySelector('[data-p="daily"]').click(); };
+      cell.onclick=()=>openDayDetail(y,m,d);
       row.append(cell);
     }
     host.append(row);
   }
-  document.getElementById('monthFoot').textContent=pad2(m+1)+' / '+y+' · '+total+' logs'+(photoDays?' · '+photoDays+' days with photos':'')+' · Tap a day to open it.';
+  document.getElementById('monthFoot').textContent=pad2(m+1)+' / '+y+' · '+total+' logs'+(photoDays?' · '+photoDays+' days with photos':'')+' · Tap a day for details.'+(gcMonth.state==='on'?' · Google: '+gcMonth.events.length+' events':'');
 }
+function openDayDetail(y,m,d){
+  const k=dayKey(y,m,d), date=new Date(y,m,d), dlg=document.getElementById('dayDialog'), body=document.getElementById('dayDialogBody');
+  document.getElementById('dayDialogKicker').textContent=date.toLocaleDateString('en-GB',{weekday:'long'}).toUpperCase()+' · W'+isoWeekOf(date);
+  document.getElementById('dayDialogTitle').textContent=monthsK[m]+' '+d+', '+y;
+  body.textContent='';
+  const section=(title,count)=>{const s=document.createElement('section');s.className='dd-sec';const h=document.createElement('h3');h.textContent=title;if(count!=null){const c=document.createElement('span');c.textContent=count;h.append(c);}s.append(h);body.append(s);return s;};
+  const row=(host,lead,text,cls='')=>{const r=document.createElement('div');r.className='dd-row '+cls;const a=document.createElement('span');a.className='dd-lead';a.textContent=lead;const b=document.createElement('span');b.className='dd-text';b.textContent=text;r.append(a,b);host.append(r);return r;};
+  let empty=true;
+  const one=db.cal2['c'+y+'-'+m+'-'+d], refl=db.reflections[k];
+  if(one||refl){empty=false;const s=section('One line');if(one)row(s,'—',one,'serif');if(refl&&refl!==one)row(s,'“',refl,'serif');}
+  const gev=googleEventsOn(k);
+  if(gev.length){empty=false;const s=section('Google Calendar',gev.length);for(const ev of gev){const r=row(s,ev.start?.date?'All day':hhmm(ev.start.dateTime)+(ev.end?.dateTime?'–'+hhmm(ev.end.dateTime):''),ev.summary||'(제목 없음)','google');r.style.setProperty('--gc',ev._cal?.color||'#6B6B67');const meta=[ev._cal?.summary,ev.location].filter(Boolean).join(' · ');if(meta){const sm=document.createElement('small');sm.textContent=meta;r.querySelector('.dd-text').append(sm);}if(ev.htmlLink&&new URL(ev.htmlLink).origin==='https://www.google.com'){const a=document.createElement('a');a.href=ev.htmlLink;a.target='_blank';a.rel='noopener';a.className='dd-link';a.textContent='Open ↗';r.append(a);}}}
+  const blocks=(db.sched[k]||[]).slice().sort((a,b)=>a.s-b.s);
+  if(blocks.length){empty=false;const s=section('Schedule',blocks.length);for(const bk of blocks)row(s,slotTime(bk.s)+'–'+slotTime(bk.e+1),(bk.gc?'G · ':'')+(bk.text||'(제목 없음)')+(scheduleKind(bk)==='plan'?'':' · actual'),scheduleKind(bk));}
+  const items=db.days[k]||[];
+  if(items.length){empty=false;const s=section('Tasks & notes',items.length);for(const it of items)row(s,glyphText(it)+(it.pri?' ★':''),it.text,statusClass(it));}
+  const habits=(db.habits||[]).filter(hb=>db.habitLog[habitLogKey(y,m,d,hb.id)]);
+  if(habits.length){empty=false;const s=section('Habits',habits.length+' / '+(db.habits||[]).length);const wrap=document.createElement('div');wrap.className='dd-chips';habits.forEach(hb=>{const c=document.createElement('span');c.textContent='✓ '+hb.name;wrap.append(c);});s.append(wrap);}
+  const journal=db.journal[k];
+  if(journal){empty=false;const s=section('Journal');const pEl=document.createElement('p');pEl.className='dd-journal';pEl.textContent=journal.length>600?journal.slice(0,600)+'…':journal;s.append(pEl);}
+  const photos=db.photos[k]||[];
+  if(photos.length){empty=false;const s=section('Photos',photos.length);const grid=document.createElement('div');grid.className='dd-photos';s.append(grid);const epoch=authEpoch;
+    for(const id of photos){const b=document.createElement('button');b.type='button';b.className='dd-photo';b.setAttribute('aria-label','사진 크게 보기');grid.append(b);loadPhoto(id).then(data=>{if(!data||epoch!==authEpoch)return;b.style.backgroundImage='url("'+data+'")';b.onclick=()=>{dlg.close();openLightbox(data);};});}}
+  if(db.routes[k]){empty=false;row(section('Places'),'⌖',routeSummary?.(db.routes[k])||'Route saved for this day');}
+  if(empty){const p=document.createElement('p');p.className='dd-empty';p.textContent='Nothing recorded on this day yet.';body.append(p);}
+  document.getElementById('dayDialogOpen').onclick=()=>{dlg.close();selectDay(date);document.querySelector('[data-p="daily"]').click();};
+  document.getElementById('dayDialogJournal').onclick=()=>{dlg.close();selectJournalDate(date);document.querySelector('[data-p="journal"]').click();};
+  dlg.showModal();
+}
+document.getElementById('dayDialogClose').onclick=()=>document.getElementById('dayDialog').close();
+document.getElementById('dayDialog').addEventListener('click',e=>{if(e.target.id==='dayDialog')e.target.close();});
 function renderGoogleEmbed(){
   const host=document.getElementById('gcEmbed'); if(!host) return;
   const email=auth.currentUser?.email, cal=db.googleCalendar?.calendar||email;
@@ -1225,7 +1292,7 @@ document.getElementById('reset').onclick=() => {
 // Reuses the existing Firebase OAuth client: no client secret or token in GitHub/Firestore.
 const calendar=installCalendar({
   getData:()=>db,getUid:()=>uid,ready:()=>!!uid&&!!sync?.isReady()&&!sync?.getConflict(),
-  mutate:fn=>{fn(db);sync?.edit(db);},persist:()=>cloudSave(),render:()=>{refreshSchedules();},onExtras:list=>{gcExtras=list||[];buildMonthGrid();},
+  mutate:fn=>{fn(db);sync?.edit(db);},persist:()=>cloudSave(),render:()=>{refreshSchedules();},onExtras:list=>{gcExtras=list||[];buildMonthGrid();},onConnected:on=>{if(on)loadMonthGoogle(true);else{gcMonth.state='off';gcMonth.events=[];gcMonth.key='';updateGoogleChip();buildMonthGrid();}},
   authorize:async scopes=>{
     if(!auth.currentUser)throw new Error('먼저 로그인해 주세요.');
     const provider=new GoogleAuthProvider();scopes.forEach(scope=>provider.addScope(scope));
