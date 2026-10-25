@@ -1,5 +1,5 @@
-import {dateKey,validDate,shiftDay,mondayOf} from './shared/dates.mjs';
-import {parseRoute,journalViews} from './shared/navigation.mjs';
+import {dateKey,validDate,shiftDay,mondayOf} from './shared/dates.mjs?v=20261025h';
+import {parseRoute,journalViews} from './shared/navigation.mjs?v=20261025h';
 const $=id=>document.getElementById(id),modules=['journal','routine'];
 const labels={today:['Today','Your daily log, with the week and month alongside.'],journal:['Journal','Your complete notebook. Eight views, the same records.'],routine:['Routine','Exercise, meals and sleep. Plan it, then log it.'],settings:['Settings','Connections, storage and backups.']};
 let selected=dateKey(),view='today',journalTab='daily',pendingAction=null,routineInteractive=false,lastRoutine=null;
@@ -33,7 +33,7 @@ function route(){
  $('period').textContent=new Date(selected+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
  $('today-layout').hidden=!['today','journal'].includes(view);$('today-layout').classList.toggle('full',view==='journal');$('overview').hidden=view!=='today';
  for(const m of ['routine','settings'])$(m+'-panel').hidden=view!==m;
- if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261025g';
+ if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261025h';
  send('journal');send('routine',view==='routine'&&routineInteractive?pendingAction:undefined);
  if(view==='routine'&&routineInteractive)pendingAction=null;
 }

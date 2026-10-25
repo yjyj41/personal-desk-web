@@ -1,4 +1,4 @@
-import {SCOPES,copy,same,createCalendarAPI,reconcile,instant,parts,importable,fingerprint,exportEventId} from './google-calendar.mjs';
+import {SCOPES,copy,same,createCalendarAPI,reconcile,instant,parts,importable,fingerprint,exportEventId} from './google-calendar.mjs?v=20261025h';
 
 const ZONES=['Europe/London','Asia/Seoul','Europe/Paris','America/New_York','UTC'];
 // Change the sync time zone. Blocks you made keep their clock time (and are re-sent);

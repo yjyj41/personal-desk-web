@@ -249,8 +249,8 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261025g">
-<link rel="stylesheet" href="./redesign.css?v=20261025g">
+<link rel="stylesheet" href="./desk.css?v=20261025h">
+<link rel="stylesheet" href="./redesign.css?v=20261025h">
 </head>
 <body>
 <div class="book">
@@ -388,16 +388,16 @@ Synced to your account ·
 <div id="lightbox"><img alt="사진"></div>
 <input type="file" id="timelineInput" accept="application/json,.json" hidden>
 <script type="module">
-import {authErrorMessage} from '../../shared/auth-errors.mjs';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261025h';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs';
-import {createJournalSync} from './journal-sync.mjs';
-import {installCalendar} from './google-calendar-ui.mjs';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261025h';
+import {createJournalSync} from './journal-sync.mjs?v=20261025h';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261025h';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261025h';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261025h';
 const firebaseConfig = {
   apiKey: "AIzaSyD58SEKBUCyg4Q6w2_tbw8MfsJivKr4jVU",
   authDomain: "bullet-journal-b359c.firebaseapp.com",
@@ -406,7 +406,7 @@ const firebaseConfig = {
   messagingSenderId: "79627536417",
   appId: "1:79627536417:web:5812b77638d0be1baafb60"
 };
-import {installFrame} from '../../shared/frame.mjs';
+import {installFrame} from '../../shared/frame.mjs?v=20261025h';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
