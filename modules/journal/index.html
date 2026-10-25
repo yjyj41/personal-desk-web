@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>try{if(window.parent!==window)document.documentElement.classList.add('in-desk')}catch(e){}</script>
 <title>Bullet Journal</title>
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.css">
 <style>
@@ -247,7 +248,9 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 .monthly-route-credit{margin-top:8px;font-size:10px;color:var(--ink-soft)}
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
-<link rel="stylesheet" href="./desk.css">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./desk.css?v=20261025">
+<link rel="stylesheet" href="./redesign.css?v=20261025">
 </head>
 <body>
 <div class="book">
@@ -287,21 +290,24 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 <button class="typebtn" data-type="note" data-for="daily" aria-label="Note">–</button>
 <input data-input="daily" aria-label="Quick log" placeholder="A task, an event, a thought…"><button class="authbtn" id="dailyAdd">Add</button>
 </div>
+<div class="daily-cols"><div class="daily-main">
 <div class="section-label">First things first <span>Up to three starred tasks</span></div>
 <ul class="focus-list" id="focusList"></ul>
 <div class="section-label">Tasks & notes <span id="dailyProgress"></span></div>
 <ul class="log" data-list="daily"></ul><p class="empty-copy" id="dailyEmpty" hidden>No entries yet. Add your first line above.</p>
 <p class="hint">Click a bullet to complete it. Use its menu to move, cancel or delete.</p>
-<details class="fold" id="backlogFold"><summary id="backlogTitle">Unfinished from earlier days</summary><div id="backlogList"></div></details>
+<details class="fold" id="backlogFold" open><summary id="backlogTitle">Unfinished from earlier days</summary><div id="backlogList"></div></details>
+</div><div class="daily-rule" aria-hidden="true"></div><div class="daily-side">
 <div class="section-label">Daily habits <span id="habitProgress"></span></div><div class="habit-chips" id="dailyHabits"></div>
 <div class="section-label"><label for="dailyReflection">One line a day</label><button class="reset" id="openJournal">Open journal →</button></div>
 <textarea class="reflection" id="dailyReflection" placeholder="One thing to remember about today."></textarea>
 <details class="fold"><summary>Calendar</summary><div class="minical" id="miniCal"></div></details>
-<details class="fold" id="scheduleFold"><summary>Schedule</summary>
+<details class="fold" id="scheduleFold" open><summary>Schedule</summary>
 <div class="sched-hint">Plans on the left, actuals on the right. Click or drag an empty slot to add a block; select a block to edit it.</div>
 <div class="schedule-scroll" id="dailySchedule"></div>
 </details>
 <details class="fold" id="dailyRouteFold"><summary id="dailyRouteTitle">Places today</summary><div class="route-card" id="dailyRoute"></div></details>
+</div></div>
 </section>
 <section class="panel" id="weekly">
 <div class="weekly-nav"><div class="ph" id="weeklyTitle">Weekly</div><button class="navbtn" id="weekPrev" aria-label="Previous week">‹</button><input type="date" id="weekPicker" aria-label="Date in selected week"><button class="navbtn" id="weekNext" aria-label="Next week">›</button><button class="navbtn" id="weekToday">This week</button></div>

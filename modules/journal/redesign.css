@@ -1,0 +1,179 @@
+/* Personal desk notebook — monochrome redesign (2026-10). Loaded last; overrides index.html + desk.css. */
+:root{--paper:#FAFAF9;--paper2:#F3F3F1;--card:#FFFFFF;--ink:#1A1A1A;--ink-soft:#6B6B67;--red:#1A1A1A;--rule:#E6E6E3;--line:#DADAD6;--shadow:rgba(40,30,15,.18);--danger:#A3361C;
+ --sans:Inter,'Noto Sans KR',system-ui,-apple-system,sans-serif;--serif:'Newsreader',Georgia,'Noto Serif KR',serif;--font-ui:var(--sans);--font-display:var(--serif);--font-meta:var(--sans)}
+html body{background:var(--paper)!important;font-family:var(--sans)!important;color:var(--ink)!important;font-size:14px}
+html.in-desk body{background:transparent!important}
+html body .book{background:transparent!important;max-width:1280px!important;margin:0 auto!important;padding:0!important}
+html:not(.in-desk) body{padding:32px 40px!important}
+html.in-desk .tabs{display:none!important}
+html.in-desk .masthead h1,html.in-desk .masthead .meta{display:none!important}
+
+/* Account / sync status */
+html body .authbar{display:flex;align-items:center;gap:8px;justify-content:flex-end;margin:0 0 16px!important;font-size:12px;color:var(--ink-soft)}
+html body .authbar #connectionStatus{display:inline-flex;align-items:center;gap:6px;height:32px;padding:0 12px;border:1px solid var(--line);border-radius:16px;background:var(--card);color:#3F6B4F}
+html body .authbar .authbtn{height:32px;min-height:32px;padding:0 12px!important;border:1px solid var(--line)!important;border-radius:16px!important;background:var(--card)!important;color:var(--ink)!important;font-size:12px}
+html body .savestate{font-size:12px;color:var(--ink-soft)}
+
+/* Buttons */
+html body .authbtn{border-radius:8px!important;background:var(--ink)!important;border:1px solid var(--ink)!important;color:#fff!important;font-weight:500;font-family:var(--sans)!important}
+html body .navbtn,html body .reset,html body .he-add{font-family:var(--sans);height:36px;min-height:36px;padding:0 12px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font-size:13px}
+html body .navbtn:hover,html body .reset:hover,html body .he-add:hover{border-color:var(--ink)}
+html body button:focus-visible,html body input:focus-visible,html body textarea:focus-visible,html body summary:focus-visible,html body select:focus-visible{outline:2px solid var(--ink)!important;outline-offset:2px}
+
+/* Gate (signed out) */
+html body .gate{background:var(--card)!important;border:1px solid var(--line)!important;border-radius:12px!important;padding:28px!important}
+html body .gate h2{font-family:var(--serif)!important;font-weight:400}
+
+/* Standalone tabs (when opened outside the desk) */
+html body .tabs{border-bottom:2px solid var(--ink)!important;gap:20px!important}
+html body .tab{font-family:var(--sans)!important;letter-spacing:.12em;text-transform:uppercase;font-size:11px!important;color:var(--ink-soft)}
+html body .tab.active{color:var(--ink)!important;border-bottom:2px solid var(--ink)!important}
+
+/* Headings */
+html body .ph{font-family:var(--serif)!important;font-weight:400!important;font-size:30px!important;letter-spacing:-.01em}
+html body .sub,html body .hint,html body .sched-hint{color:var(--ink-soft)}
+html body hr.rule{border-top:2px solid var(--ink);opacity:1}
+html body .section-label{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:0 0 12px!important;font-family:var(--serif)!important;font-size:26px!important;font-weight:400!important;text-transform:none!important;letter-spacing:0!important;color:var(--ink)!important}
+html body .section-label span,html body .section-label label{font-family:var(--serif)}
+html body .section-label>span{font-family:var(--sans)!important;font-size:11px!important;letter-spacing:.14em!important;text-transform:uppercase;color:var(--ink-soft)!important;font-weight:500}
+html body .section-label .reset{font-family:var(--sans);font-size:13px;height:32px;min-height:32px;border:0;background:none;color:#555552;padding:0}
+html body .section-label .reset:hover{color:var(--ink)}
+
+/* Today: quick add */
+html body.desk-today .today-head{display:none!important}
+html body .today-head{margin:0 0 16px!important}
+html body #daily>.adder{display:flex;align-items:center;gap:8px;margin:0 0 28px!important;padding:6px!important;background:var(--card)!important;border:1px solid var(--line)!important;border-radius:12px!important}
+html body .adder .typebtn{width:auto;min-width:40px;height:34px;min-height:34px;padding:0 10px;border:0!important;border-radius:6px!important;background:#F0F0EE!important;color:var(--ink);font-size:16px}
+html body .adder .typebtn.sel{background:var(--ink)!important;color:#FAFAF9!important;border:0!important}
+html body .adder input{flex:1;min-width:0;height:40px;border:0!important;background:transparent!important;font-size:15px;padding:0 8px!important}
+html body .adder .authbtn{height:40px;min-height:40px;padding:0 18px!important;font-weight:600}
+html body .panel:not(#daily) .adder{background:transparent;border:0;padding:0;margin-top:10px}
+html body .panel:not(#daily) .adder input{border-bottom:1px solid var(--line)!important}
+
+/* Today: two columns */
+.daily-cols{display:grid;grid-template-columns:minmax(0,7fr) 1px minmax(0,5fr);gap:40px}
+.daily-rule{background:#E0E0DD}
+.daily-main,.daily-side{display:flex;flex-direction:column;min-width:0}
+.daily-main>.section-label,.daily-side>.section-label{margin-top:28px!important}
+.daily-main>.section-label:first-child,.daily-side>.section-label:first-child{margin-top:0!important}
+
+/* First things first */
+html body .focus-list{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+html body .focus-list li.empty-copy{grid-column:1/-1;padding:18px;border:1px dashed #CCCCC8;border-radius:12px;color:#8A8A86!important;font-size:13px}
+html body .focus-list button{display:flex;align-items:flex-start;min-height:112px;width:100%;padding:16px!important;border:1px solid var(--line)!important;border-left:1px solid var(--line)!important;border-radius:12px!important;background:var(--card)!important;font-size:15px;line-height:1.4;text-align:left;color:var(--ink)}
+html body .focus-list button:hover{border-color:var(--ink)!important}
+
+/* Tasks & notes */
+html body ul.log li{display:flex;align-items:center;gap:6px;min-height:44px;padding:0!important;border-bottom:1px solid var(--rule)!important}
+html body .bullet{min-width:28px;width:28px;min-height:40px;font-size:18px;color:var(--ink)!important}
+html body .star{min-width:28px;width:28px;color:var(--ink)!important;opacity:.2}
+html body .star.on{opacity:1}
+html body .itext{font-size:15px!important;border:0!important}
+html body .itext.s-done,html body .itext.s-strike{color:#8A8A86}
+html body .tag{color:var(--ink-soft);border-color:var(--line);border-radius:10px;opacity:1}
+html body .item-menu{height:32px;min-height:32px;border:1px solid transparent;border-radius:8px;background:transparent;color:var(--ink-soft);font-size:12px}
+html body .item-menu:hover{border-color:var(--line);background:var(--card)}
+html body .empty-copy{font-size:13px;color:#8A8A86!important;padding:12px 0}
+html body #daily .hint{margin:10px 0 0;font-size:12px}
+
+/* Folds become sections */
+html body .fold{margin:28px 0 0!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important}
+html body .fold>summary{list-style:none;cursor:pointer;font-family:var(--serif)!important;font-size:26px!important;font-weight:400!important;min-height:36px;display:flex;align-items:center;justify-content:space-between;color:var(--ink)}
+html body .fold>summary::-webkit-details-marker{display:none}
+html body .fold>summary::after{content:'+';font-family:var(--sans);font-size:18px;color:var(--ink-soft)}
+html body .fold[open]>summary::after{content:'–'}
+html body .fold[open]>summary{margin-bottom:10px}
+html body #backlogFold{background:var(--paper2)!important;border-radius:12px!important;padding:12px 20px 14px!important}
+html body #backlogFold>summary{font-family:var(--sans)!important;font-size:11px!important;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);font-weight:500!important;min-height:32px}
+html body .backlog-row{border-bottom:0;padding:6px 0;gap:8px}
+html body .backlog-row p{font-size:14px}
+html body .backlog-row small{font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+html body .backlog-row .reset{height:32px;min-height:32px;font-size:12px}
+
+/* Habits + one line */
+html body .habit-chips{display:flex;gap:8px;flex-wrap:wrap}
+html body .habit-chip{height:34px;min-height:34px;padding:0 12px!important;border-radius:17px!important;border:1px solid #CCCCC8!important;background:var(--card)!important;font-size:13px!important;color:var(--ink)}
+html body .habit-chip[aria-pressed="true"]{background:var(--ink)!important;border-color:var(--ink)!important;color:#fff!important}
+html body .reflection{min-height:84px!important;padding:12px 16px!important;border:1px solid var(--line)!important;border-radius:12px!important;background:var(--card)!important;font-family:var(--serif)!important;font-size:18px!important;line-height:1.45!important}
+
+/* Calendars */
+html body .mc-cell{border-radius:8px}
+html body .mc-cell:hover,html body #journalCalendar .mc-cell:hover{background:#EBEBE9!important}
+html body .mc-cell.today{border-color:var(--ink);color:var(--ink)}
+html body .mc-cell.sel{background:var(--ink)!important;color:#fff!important}
+html body .mc-cell.has::after{background:var(--ink)}
+html body .mc-wd.sun,html body ul.cal .dw.sun{color:var(--ink-soft)}
+html body ul.cal li{border-bottom:1px solid var(--rule)}
+html body ul.cal li.today{background:var(--paper2)}
+html body ul.cal li.today .dnum{color:var(--ink)}
+
+/* Schedule */
+html body .schedule-grid{border:1px solid var(--line);border-radius:12px;background:var(--card);overflow:hidden}
+html body .schedule-day-head{background:var(--paper2)}
+html body .schedule-day-head.is-today{box-shadow:inset 0 3px var(--ink)}
+html body .schedule-lane{background-image:repeating-linear-gradient(to bottom,transparent 0,transparent 25px,#EDEDEA 25px,#EDEDEA 26px)}
+html body .schedule-lane.actual{border-left:1px solid var(--rule);background-color:transparent}
+html body .schedule-block{border-left:0;border-radius:7px;box-shadow:none;background:#B5462F}
+html body .schedule-block .schedule-block-edit{color:#fff}
+html body .schedule-block .schedule-block-edit small,html body .schedule-block .schedule-grip{color:rgba(255,255,255,.8)}
+html body .schedule-block.color-1{background:#4F7B6B}
+html body .schedule-block.color-2{background:#46677C}
+html body .schedule-block.color-3{background:#8E6B3F}
+html body .schedule-block.color-4{background:#6E5A8C}
+html body .schedule-lane.plan .schedule-block{background:#fff;border:1.5px dashed #B5462F}
+html body .schedule-lane.plan .schedule-block .schedule-block-edit{color:#7A2E1E}
+html body .schedule-lane.plan .schedule-block.color-1{border-color:#4F7B6B}html body .schedule-lane.plan .schedule-block.color-1 .schedule-block-edit{color:#2F5546}
+html body .schedule-lane.plan .schedule-block.color-2{border-color:#46677C}html body .schedule-lane.plan .schedule-block.color-2 .schedule-block-edit{color:#2F4A5C}
+html body .schedule-lane.plan .schedule-block.color-3{border-color:#8E6B3F}html body .schedule-lane.plan .schedule-block.color-3 .schedule-block-edit{color:#6B4F2A}
+html body .schedule-lane.plan .schedule-block.color-4{border-color:#6E5A8C}html body .schedule-lane.plan .schedule-block.color-4 .schedule-block-edit{color:#4F3F68}
+html body .schedule-lane.plan .schedule-block small,html body .schedule-lane.plan .schedule-grip{color:var(--ink-soft)}
+html body .schedule-selection{background:rgba(26,26,26,.08);border:1px dashed var(--ink)}
+
+/* Places / maps */
+html body .route-map,html body .route-empty{border-radius:12px;border-color:var(--line)}
+html body .route-stop{background:var(--ink)}
+html body .monthly-route-card{border-radius:12px;background:var(--card);border-color:var(--line)}
+
+/* Other views */
+html body .fbox h4{font-family:var(--serif);font-weight:400;font-size:20px;border-bottom:2px solid var(--ink)}
+html body .htable thead th{border-bottom:2px solid var(--ink)}
+html body .hdot{border-color:#CCCCC8}
+html body .hdot.on{background:var(--ink);border-color:var(--ink)}
+html body .key-grid .sym.red{color:var(--ink)}
+html body .journal-sidebar{background:var(--card);border:1px solid var(--line);border-radius:12px}
+html body .journal-reflection{border-left:0;border-radius:10px;background:var(--paper2)}
+html body .jtext,html body textarea.note{font-size:16px}
+html body .jphoto{border-radius:10px;border-color:var(--line)}
+
+/* Footer: backup tools */
+html body footer{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:32px;padding:16px 0 0!important;border-top:1px solid #E0E0DD;font-size:12px;color:var(--ink-soft);text-align:left}
+html body footer .backup-actions{margin:0;justify-content:flex-start}
+html body footer .reset{border-color:transparent;background:transparent;color:#555552}
+html body footer .reset:hover{border-color:var(--line);background:var(--card)}
+html body footer #reset{color:var(--danger)}
+
+/* Toast + dialogs */
+html body .toast{background:var(--ink);color:#fff;border-radius:12px}
+html body dialog{border:1px solid var(--line)!important;border-radius:14px!important;background:var(--card)!important}
+html body dialog h2{font-family:var(--serif);font-weight:400}
+
+@media(max-width:900px){
+ .daily-cols{grid-template-columns:1fr;gap:0}
+ .daily-rule{display:none}
+ .daily-side>.section-label:first-child{margin-top:28px!important}
+}
+@media(max-width:640px){
+ html:not(.in-desk) body{padding:16px!important}
+ html body .section-label,html body .fold>summary{font-size:22px!important}
+ html body .section-label{flex-wrap:wrap;row-gap:2px}
+ html body .focus-list{grid-template-columns:1fr;gap:0;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:0 12px}
+ html body .focus-list button{min-height:44px;padding:10px 0!important;border:0!important;border-bottom:1px solid var(--rule)!important;border-radius:0!important;background:transparent!important}
+ html body .focus-list li:last-child button{border-bottom:0!important}
+ html body .focus-list li.empty-copy{border:0;padding:12px 0}
+ html body #daily>.adder{flex-wrap:nowrap;gap:4px;padding:5px!important;border-radius:14px!important}
+ html body .adder .typebtn{min-width:32px;padding:0 6px}
+ html body .adder input{font-size:16px!important}
+ html body .habit-chips{flex-wrap:nowrap;overflow-x:auto;padding-bottom:2px}
+ html body .habit-chip{flex:none;white-space:nowrap}
+ html body .reflection{font-size:17px!important}
+}

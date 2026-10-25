@@ -4,6 +4,7 @@ const $=id=>document.getElementById(id),modules=['journal','routine','spending']
 const labels={today:['Today','Your daily log, with the week and month alongside.'],journal:['Journal','Your complete notebook. Eight views, the same records.'],routine:['Routine','Exercise, meals and sleep. Plan it, then log it.'],spending:['Spending','Transactions, budgets and the month in view.'],settings:['Settings','Connections, storage and backups.']};
 let selected=dateKey(),view='today',journalTab='daily',pendingAction=null,routineInteractive=false,lastRoutine=null;
 const ready=new Set();
+function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7);}
 function send(module,action){if(ready.has(module))$(module+'-frame').contentWindow.postMessage({channel:'personal-desk',type:'context',date:selected,view,action:module==='journal'&&view==='journal'?journalTab:action},location.origin);}
 function setDate(value){
  if(!validDate(value)){$('date').value=selected;return;} selected=value;$('date').value=value;
@@ -11,15 +12,16 @@ function setDate(value){
  $('period').textContent=date.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
  $('footer-date').textContent=value.replaceAll('-',' / ');
  $('stamp-month').textContent=date.toLocaleDateString('en-GB',{month:'short'}).toUpperCase();$('stamp-day').textContent=date.getDate();$('stamp-weekday').textContent=date.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase();
- $('spending-label').textContent='03 / '+date.toLocaleDateString('en-GB',{month:'long'}).toUpperCase();
+ $('spending-label').textContent=date.toLocaleDateString('en-GB',{month:'long'})+' · Spending';
+ $('big-date').textContent=String(date.getMonth()+1).padStart(2,'0')+'.'+String(date.getDate()).padStart(2,'0');$('big-weekday').textContent=date.toLocaleDateString('en-GB',{weekday:'long'}).toUpperCase();$('big-week').textContent=date.getFullYear()+' · Week '+isoWeek(date);
  $('week-strip').replaceChildren();
  for(let i=0;i<7;i++){const key=shiftDay(mondayOf(value),i),day=new Date(key+'T12:00:00'),button=document.createElement('button');button.type='button';button.setAttribute('aria-label',day.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));button.setAttribute('aria-pressed',String(key===selected));const label=document.createElement('span'),num=document.createElement('b');label.textContent=day.toLocaleDateString('en-GB',{weekday:'short'}).slice(0,2).toUpperCase();num.textContent=day.getDate();button.append(label,num);button.onclick=()=>setDate(key);$('week-strip').append(button);}
  if(lastRoutine?.week!==mondayOf(value)){$('routine-value').textContent='—';$('routine-note').textContent='Open Routine to see this week’s activity.';}
  modules.forEach(m=>send(m));
 }
 function updateNavigation(){
+ document.body.dataset.journalTab=journalTab;
  document.querySelectorAll('[data-view]').forEach(a=>{if(a.dataset.view===view)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
- $('journal-nav').hidden=view!=='journal';
  document.querySelectorAll('[data-journal]').forEach(a=>{if(view==='journal'&&a.dataset.journal===journalTab)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
  $('breadcrumb').textContent='PERSONAL DESK / '+labels[view][0].toUpperCase()+(view==='journal'?' / '+journalViews[journalTab].toUpperCase():'');
  $('journal-heading').textContent=view==='today'?'Daily log':journalViews[journalTab];
@@ -32,7 +34,7 @@ function route(){
  $('period').textContent=view==='spending'?'MONTHLY OVERVIEW':new Date(selected+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
  $('today-layout').hidden=!['today','journal'].includes(view);$('today-layout').classList.toggle('full',view==='journal');$('overview').hidden=view!=='today';
  for(const m of ['routine','spending','settings'])$(m+'-panel').hidden=view!==m;
- if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261008';
+ if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261025';
  send('journal');send('spending');send('routine',view==='routine'&&routineInteractive?pendingAction:undefined);
  if(view==='routine'&&routineInteractive)pendingAction=null;
 }
