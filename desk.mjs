@@ -1,5 +1,5 @@
-import {dateKey,validDate,shiftDay,mondayOf} from './shared/dates.mjs?v=20261025h';
-import {parseRoute,journalViews} from './shared/navigation.mjs?v=20261025h';
+import {dateKey,validDate,shiftDay,mondayOf} from './shared/dates.mjs?v=20261104a';
+import {parseRoute,journalViews} from './shared/navigation.mjs?v=20261104a';
 const $=id=>document.getElementById(id),modules=['journal','routine'];
 const labels={today:['Today','Your daily log, with the week and month alongside.'],journal:['Journal','Your complete notebook. Eight views, the same records.'],routine:['Routine','Exercise, meals and sleep. Plan it, then log it.'],settings:['Settings','Connections, storage and backups.']};
 let selected=dateKey(),view='today',journalTab='daily',pendingAction=null,routineInteractive=false,lastRoutine=null;
@@ -33,7 +33,7 @@ function route(){
  $('period').textContent=new Date(selected+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
  $('today-layout').hidden=!['today','journal'].includes(view);$('today-layout').classList.toggle('full',view==='journal');$('overview').hidden=view!=='today';
  for(const m of ['routine','settings'])$(m+'-panel').hidden=view!==m;
- if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261025h';
+ if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261104a';
  send('journal');send('routine',view==='routine'&&routineInteractive?pendingAction:undefined);
  if(view==='routine'&&routineInteractive)pendingAction=null;
 }
@@ -56,3 +56,5 @@ $('journal-retry').onclick=()=>{$('journal-frame').src='./modules/journal/index.
 setTimeout(()=>{if(!ready.has('journal')){$('journal-loading').hidden=true;$('journal-fallback').hidden=false;}},12000);
 try{const old=localStorage.getItem('personal_desk_spending_v1');if(old){$('old-spending').hidden=false;$('spending-export').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([old],{type:'application/json'}));a.download='spending-backup-'+dateKey()+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);};}}catch{}
 window.addEventListener('hashchange',route);setDate(selected);route();
+
+$('manage-tags').onclick=()=>{location.hash='journal/journal';$('journal-frame').contentWindow.postMessage({channel:'personal-desk',type:'manage-tags'},location.origin);};

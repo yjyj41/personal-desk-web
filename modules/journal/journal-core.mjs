@@ -1,5 +1,6 @@
+import {validateNotebook} from './notebook.mjs';
 // Pure data operations shared by the app and regression tests.
-import {validateRoutes} from './timeline.mjs?v=20261025h';
+import {validateRoutes} from './timeline.mjs?v=20261104a';
 
 export const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
@@ -51,7 +52,7 @@ export function validateJournal(data) {
       scan(value[key]);
     }
   };
-  scan(data);
+  scan(data); validateNotebook(data);
   if(data.googleCalendar!==undefined){
     const g=data.googleCalendar;
     if(!object(g)||(g.calendar!==undefined&&typeof g.calendar!=='string')||(g.defaultSend!==undefined&&typeof g.defaultSend!=='boolean'))throw new Error('캘린더 설정 형식 오류');
@@ -104,8 +105,8 @@ export function previousOpenTasks(data, before) {
 }
 
 export function journalEntryDates(data) {
-  return [...new Set([...Object.keys(data.journal || {}), ...Object.keys(data.reflections || {}), ...Object.keys(data.photos || {}), ...Object.keys(data.routes || {})])]
+  return [...new Set([...Object.keys(data.journal || {}), ...Object.keys(data.reflections || {}), ...Object.keys(data.photos || {}), ...Object.keys(data.routes || {}), ...Object.values(data.entries || {}).map(n=>n.date)])]
     .filter(key => /^\d{4}-\d{2}-\d{2}$/.test(key) &&
-      ((data.journal?.[key] || '').trim() || (data.reflections?.[key] || '').trim() || data.photos?.[key]?.length || data.routes?.[key]))
+      ((data.journal?.[key] || '').trim() || (data.reflections?.[key] || '').trim() || data.photos?.[key]?.length || data.routes?.[key] || Object.values(data.entries||{}).some(n=>n.date===key)))
     .sort();
 }
