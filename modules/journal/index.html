@@ -249,8 +249,9 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261025h">
-<link rel="stylesheet" href="./redesign.css?v=20261025h">
+<link rel="stylesheet" href="./desk.css?v=20261104a">
+<link rel="stylesheet" href="./redesign.css?v=20261104a">
+<link rel="stylesheet" href="./notebook.css?v=20261104">
 </head>
 <body>
 <div class="book">
@@ -377,36 +378,32 @@ Synced to your account ·
 <dialog id="scheduleDialog"><form id="scheduleForm">
 <h2 id="scheduleDialogTitle">Schedule</h2><p id="scheduleDialogDate"></p>
 <label class="schedule-field">구분<select id="scheduleKind"><option value="plan">Plan</option><option value="actual">Actual</option></select></label>
-<label class="hint"><input type="checkbox" id="scheduleGoogle"> Show in Google Calendar</label><p class="hint">끄면 불렛저널에만 저장합니다. 이미 연결된 일정은 Google에서 삭제 확인을 받습니다.</p>
+<label class="hint"><input type="checkbox" id="scheduleGoogle"> 이 일정만 Google과 연결</label><p class="hint">연결을 꺼도 양쪽 일정은 남습니다. Google 원본 삭제는 별도 버튼을 사용하세요.</p>
 <label class="schedule-field">Details<textarea id="scheduleText" rows="3" placeholder="What are you planning? What happened?"></textarea></label>
 <div class="schedule-times"><label class="schedule-field">Start<select id="scheduleStart"></select></label><label class="schedule-field">End<select id="scheduleEnd"></select></label></div>
 <label class="schedule-field">Colour<select id="scheduleColor"><option value="0">Red</option><option value="1">Green</option><option value="2">Blue</option><option value="3">Ochre</option><option value="4">Purple</option></select></label>
-<p id="scheduleError" class="load-error" hidden></p><div class="dialog-actions"><button type="button" class="reset" id="scheduleDelete">Delete</button><button type="button" class="authbtn" id="scheduleCancel">Cancel</button><button type="submit" class="authbtn">Save</button></div>
+<label class="schedule-field">Google 대상 캘린더<select id="scheduleCalendar"></select></label><div id="scheduleTags" class="tag-picks"></div><p id="scheduleLinkState" class="hint"></p><button id="scheduleGoogleDelete" type="button" class="reset">Google 원본도 삭제</button><p id="scheduleError" class="load-error" hidden></p><div class="dialog-actions"><button type="button" class="reset" id="scheduleDelete">Delete</button><button type="button" class="authbtn" id="scheduleCancel">Cancel</button><button type="submit" class="authbtn">Save</button></div>
 </form></dialog>
 <div id="printArea"></div>
 <dialog id="dayDialog" aria-labelledby="dayDialogTitle"><div class="dd-head"><div><p class="dd-kicker" id="dayDialogKicker"></p><h2 id="dayDialogTitle"></h2></div><button type="button" class="dd-close" id="dayDialogClose" aria-label="Close">×</button></div><div id="dayDialogBody"></div><div class="dialog-actions"><button type="button" class="reset" id="dayDialogJournal">Open journal</button><button type="button" class="authbtn" id="dayDialogOpen">Open this day</button></div></dialog>
 <div id="lightbox"><img alt="사진"></div>
 <input type="file" id="timelineInput" accept="application/json,.json" hidden>
 <script type="module">
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261025h';
+import {installNotebook} from './notebook-ui.mjs';
+import {allNotes,visibleByTags} from './notebook.mjs';
+import {installRoutineJournal} from '../../shared/routine-journal.mjs';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261104a';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261025h';
-import {createJournalSync} from './journal-sync.mjs?v=20261025h';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261025h';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261025h';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261025h';
-const firebaseConfig = {
-  apiKey: "AIzaSyD58SEKBUCyg4Q6w2_tbw8MfsJivKr4jVU",
-  authDomain: "bullet-journal-b359c.firebaseapp.com",
-  projectId: "bullet-journal-b359c",
-  storageBucket: "bullet-journal-b359c.firebasestorage.app",
-  messagingSenderId: "79627536417",
-  appId: "1:79627536417:web:5812b77638d0be1baafb60"
-};
-import {installFrame} from '../../shared/frame.mjs?v=20261025h';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261104a';
+import {createJournalSync} from './journal-sync.mjs?v=20261104a';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261104a';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261104a';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261104a';
+import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
+import {installFrame} from '../../shared/frame.mjs?v=20261104a';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -538,7 +535,7 @@ async function connectUser(user) {
 document.getElementById('signInBtn').onclick = document.getElementById('gateSignIn').onclick =
   async () => {
     const button=document.getElementById('gateSignIn'),headerButton=document.getElementById('signInBtn'),error=document.getElementById('authError');error.hidden=true;button.disabled=true;headerButton.disabled=true;
-    try{await signInWithPopup(auth,provider);}catch(e){error.textContent=authErrorMessage(e);error.hidden=false;}finally{button.disabled=false;headerButton.disabled=false;}
+    try{const result=await signInWithPopup(auth,provider);try{await routineJournal.accept(result);}catch(e){notify('저널 로그인 완료 · 운동 연결은 다시 시도해 주세요: '+e.message);}}catch(e){error.textContent=authErrorMessage(e);error.hidden=false;}finally{button.disabled=false;headerButton.disabled=false;}
   };
 document.getElementById('signOutBtn').onclick = async () => {
   if (signingOut) return;
@@ -549,7 +546,7 @@ document.getElementById('signOutBtn').onclick = async () => {
       const saved = await cloudSave();
       if ((!saved || sync?.dirty()) && !confirm('아직 클라우드에 저장하지 못한 기록이 있어요. 저장 상태를 확인해 주세요. 그래도 로그아웃할까요?')) return;
     }
-    await signOut(auth);
+    await routineJournal.logout(); await signOut(auth);
   } catch (error) { alert('로그아웃 실패: '+error.message); }
   finally { signingOut = false; button.disabled = false; }
 };
@@ -633,10 +630,10 @@ function hhmm(iso){return zoned(iso).time;}
 function localKeyOf(iso){return zoned(iso).key;}
 /* Google events for a day: every calendar shown in Google when connected, otherwise the sync extras. Blocks already linked to the journal are not repeated. */
 function googleEventsOn(k){
-  const linked=new Set(Object.values(db.sched||{}).flat().map(b=>b.gc?.eventId).filter(Boolean));
+  const linked=new Set(Object.values(db.sched||{}).flat().filter(b=>b.google&&b.gc).map(b=>b.gc.calendar+'|'+b.gc.eventId));
   const source=gcMonth.state==='on'?gcMonth.events:gcExtras, hidden=new Set(db.googleCalendar?.hidden||[]);
   return source.filter(ev=>{
-    if(linked.has(ev.id)||(ev._cal&&hidden.has(ev._cal.id)))return false;
+    if(linked.has((ev._cal?.id||ev._calendar||'')+'|'+ev.id)||(ev._cal&&hidden.has(ev._cal.id))||!visibleByTags(db,db.googleEventTags?.[(ev._cal?.id||ev._calendar||'')+'|'+ev.id]))return false;
     if(ev.start?.date){const start=ev.start.date.slice(0,10),end=(ev.end?.date||ev.start.date).slice(0,10);return k>=start&&(k<end||start===end&&k===start);}
     return !!ev.start?.dateTime&&localKeyOf(ev.start.dateTime)===k;
   }).sort((a,b)=>(a.start?.date?0:1)-(b.start?.date?0:1)||String(a.start?.dateTime||'').localeCompare(String(b.start?.dateTime||'')));
@@ -693,9 +690,9 @@ function loadPhoto(id){
 function isoWeekOf(date){const t=new Date(Date.UTC(date.getFullYear(),date.getMonth(),date.getDate()));const n=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-n);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7);}
 function dayLines(y,m,d){
   const k=dayKey(y,m,d),lines=[];
-  const one=db.cal2['c'+y+'-'+m+'-'+d]; if(one) lines.push({text:one,kind:'line'});
-  for(const it of db.days[k]||[]) if(it.type==='event') lines.push({text:'○ '+it.text,kind:'event',done:it.status==='done'});
-  for(const bk of (db.sched[k]||[]).slice().sort((a,b)=>a.s-b.s)) if(scheduleKind(bk)==='plan'||bk.gc) lines.push({text:slotTime(bk.s)+' '+(bk.text||''),kind:bk.gc?'google':'plan'});
+  const one=db.cal2['c'+y+'-'+m+'-'+d]; if(one&&visibleByTags(db,[])) lines.push({text:one,kind:'line'});
+  for(const it of db.days[k]||[]) if(it.type==='event'&&visibleByTags(db,[])) lines.push({text:'○ '+it.text,kind:'event',done:it.status==='done'});
+  for(const bk of (db.sched[k]||[]).slice().sort((a,b)=>a.s-b.s)) if(visibleByTags(db,bk.tags)&&(scheduleKind(bk)==='plan'||bk.gc)) lines.push({text:slotTime(bk.s)+' '+(bk.text||''),kind:bk.gc?'google':'plan'});
   for(const ev of googleEventsOn(k)) lines.push({text:(ev.start?.dateTime?hhmm(ev.start.dateTime)+' ':'')+(ev.summary||'(제목 없음)'),kind:ev.start?.date?'gday':'gtime',color:ev._cal?.color});
   return lines;
 }
@@ -747,14 +744,14 @@ function openDayDetail(y,m,d){
   const one=db.cal2['c'+y+'-'+m+'-'+d], refl=db.reflections[k];
   if(one||refl){empty=false;const s=section('One line');if(one)row(s,'—',one,'serif');if(refl&&refl!==one)row(s,'“',refl,'serif');}
   const gev=googleEventsOn(k);
-  if(gev.length){empty=false;const s=section('Google Calendar',gev.length);for(const ev of gev){const r=row(s,ev.start?.date?'All day':hhmm(ev.start.dateTime)+(ev.end?.dateTime?'–'+hhmm(ev.end.dateTime):''),ev.summary||'(제목 없음)','google');r.style.setProperty('--gc',ev._cal?.color||'#6B6B67');const meta=[ev._cal?.summary,ev.location].filter(Boolean).join(' · ');if(meta){const sm=document.createElement('small');sm.textContent=meta;r.querySelector('.dd-text').append(sm);}if(ev.htmlLink&&new URL(ev.htmlLink).origin==='https://www.google.com'){const a=document.createElement('a');a.href=ev.htmlLink;a.target='_blank';a.rel='noopener';a.className='dd-link';a.textContent='Open ↗';r.append(a);}}}
-  const blocks=(db.sched[k]||[]).slice().sort((a,b)=>a.s-b.s);
+  if(gev.length){empty=false;const s=section('Google Calendar',gev.length);for(const ev of gev){const r=row(s,ev.start?.date?'All day':hhmm(ev.start.dateTime)+(ev.end?.dateTime?'–'+hhmm(ev.end.dateTime):''),ev.summary||'(제목 없음)','google');r.style.setProperty('--gc',ev._cal?.color||'#6B6B67');const meta=[ev._cal?.summary,ev.location].filter(Boolean).join(' · ');if(meta){const sm=document.createElement('small');sm.textContent=meta;r.querySelector('.dd-text').append(sm);}if(ev.htmlLink&&new URL(ev.htmlLink).origin==='https://www.google.com'){const a=document.createElement('a');a.href=ev.htmlLink;a.target='_blank';a.rel='noopener';a.className='dd-link';a.textContent='Open ↗';r.append(a);}const tags=document.createElement('div');tags.className='tag-picks';const eventKey=(ev._cal?.id||ev._calendar||'')+'|'+ev.id;notebook.picker(tags,db.googleEventTags?.[eventKey]||[],value=>{(db.googleEventTags||={})[eventKey]=value;save();buildMonthGrid();});r.append(tags);const link=document.createElement('button');link.className='authbtn';link.textContent='이 일정만 연결';link.onclick=async()=>{try{await calendar.linkEvent(ev,ev._cal?.id||ev._calendar);dlg.close();}catch(e){notify(e.message);}};r.append(link);}}
+  const blocks=(db.sched[k]||[]).filter(b=>visibleByTags(db,b.tags)).slice().sort((a,b)=>a.s-b.s);
   if(blocks.length){empty=false;const s=section('Schedule',blocks.length);for(const bk of blocks)row(s,slotTime(bk.s)+'–'+slotTime(bk.e+1),(bk.gc?'G · ':'')+(bk.text||'(제목 없음)')+(scheduleKind(bk)==='plan'?'':' · actual'),scheduleKind(bk));}
   const items=db.days[k]||[];
   if(items.length){empty=false;const s=section('Tasks & notes',items.length);for(const it of items)row(s,glyphText(it)+(it.pri?' ★':''),it.text,statusClass(it));}
   const habits=(db.habits||[]).filter(hb=>db.habitLog[habitLogKey(y,m,d,hb.id)]);
   if(habits.length){empty=false;const s=section('Habits',habits.length+' / '+(db.habits||[]).length);const wrap=document.createElement('div');wrap.className='dd-chips';habits.forEach(hb=>{const c=document.createElement('span');c.textContent='✓ '+hb.name;wrap.append(c);});s.append(wrap);}
-  const journal=db.journal[k];
+  const journal=allNotes(db).filter(n=>n.date===k).map(n=>n.title+'\n'+n.body).join('\n\n');
   if(journal){empty=false;const s=section('Journal');const pEl=document.createElement('p');pEl.className='dd-journal';pEl.textContent=journal.length>600?journal.slice(0,600)+'…':journal;s.append(pEl);}
   const photos=db.photos[k]||[];
   if(photos.length){empty=false;const s=section('Photos',photos.length);const grid=document.createElement('div');grid.className='dd-photos';s.append(grid);const epoch=authEpoch;
@@ -871,6 +868,7 @@ document.getElementById('confirmMove').onclick=() => {
   moveDailyTask(moveRequest.source,target,moveRequest.index); document.getElementById('moveDialog').close();
 };
 function renderToday() {
+  routineJournal.render();
   if (!viewDaily) return;
   const key=dayKey(viewDaily.y,viewDaily.m,viewDaily.d), list=db.days[key] || [];
   document.getElementById('dayPicker').value=key;
@@ -1045,10 +1043,12 @@ function buildHabitEdit(){ const host=document.getElementById('habitEditList'); 
 function shiftHabit(delta){ let m=viewHabit.m+delta, y=viewHabit.y; while(m<0){m+=12;y--;} while(m>11){m-=12;y++;} viewHabit={y,m}; buildHabit(); }
 
 function renderJournal() {
+  notebook.render(); routineJournal.render();
   const v=viewJournal, k=dayKey(v.y,v.m,v.d), today=new Date();
   const isToday=k===dayKey(today.getFullYear(),today.getMonth(),today.getDate());
   document.getElementById('journalDate').textContent=v.y+' '+monthsK[v.m]+' '+v.d+' · '+wdK[new Date(v.y,v.m,v.d).getDay()]+''+(isToday?' · Today':'');
   const textarea=document.getElementById('journalText'); textarea.value=db.journal[k] || '';
+  textarea.onchange=()=>notebook.render();
   textarea.oninput=()=>{if(textarea.value) db.journal[k]=textarea.value; else delete db.journal[k]; save();};
   const reflection=document.getElementById('journalReflection'); reflection.textContent=db.reflections[k] || ''; reflection.hidden=!reflection.textContent.trim();
   if(!journalMonth) journalMonth={y:v.y,m:v.m};
@@ -1139,7 +1139,7 @@ async function removePhoto(k,id) {
 }
 function openLightbox(src){ const lb=document.getElementById('lightbox'); lb.querySelector('img').src=src; lb.style.display='flex'; }
 function glyphText(it){ if(it.type==='note')return '–'; if(it.type==='event')return it.status==='done'?'✓○':'○'; switch(it.status){case 'done':return '✓';case 'migrated':return '›';case 'scheduled':return '‹';case 'strike':return '✗';default:return '•';} }
-async function exportPDF(){ const btn=document.getElementById('exportPdf'); const orig=btn.textContent; btn.disabled=true; btn.textContent='PDF 생성 중…'; try{ const y=viewMonth.y, m=viewMonth.m; const days=new Date(y,m+1,0).getDate(); const allIds=[]; for(let d=1;d<=days;d++){ const ids=db.photos[dayKey(y,m,d)]; if(ids&&ids.length) allIds.push(...ids); } if(allIds.length) btn.textContent='사진 불러오는 중…'; await Promise.all(allIds.filter(id=>!photoCache[id]).map(async id=>{ try{ const snap=await getDoc(doc(fdb,'journalPhotos',id)); if(snap.exists()) photoCache[id]=snap.data().data; }catch(e){ console.error(e); } })); btn.textContent='PDF 생성 중…'; const P=[]; P.push('<h2>'+y+' '+monthsK[m]+' · Bullet Journal</h2>'); const mtasks=db.months[monKey(y,m)]||[]; if(mtasks.length){ P.push('<h3>Monthly Log</h3><ul>'); mtasks.forEach(it=>P.push('<li>'+glyphText(it)+' '+esc(it.text)+(it.pri?' ★':'')+'</li>')); P.push('</ul>'); } const dayParts=[]; for(let d=1;d<=days;d++){ const k=dayKey(y,m,d); const tasks=db.days[k]||[]; const sc=(db.sched[k]||[]).slice().sort((a,b)=>a.s-b.s); const jr=[db.reflections[k],db.journal[k]].filter(Boolean).join('\n\n'); const cal=db.cal2['c'+y+'-'+m+'-'+d]; const pics=(db.photos[k]||[]).map(id=>photoCache[id]).filter(Boolean); if(!tasks.length&&!sc.length&&!jr&&!cal&&!pics.length) continue; let s='<div class="pd"><div class="pdt">'+(m+1)+'/'+d+' ('+wdK[new Date(y,m,d).getDay()]+')</div>'; if(cal) s+='<div style="font-size:12px">· '+esc(cal)+'</div>'; if(tasks.length){ s+='<ul>'; tasks.forEach(it=>s+='<li>'+glyphText(it)+' '+esc(it.text)+(it.pri?' ★':'')+'</li>'); s+='</ul>'; } if(sc.length){ s+='<ul>'; sc.forEach(bk=>s+='<li>⏱ ['+(scheduleKind(bk)==='plan'?'계획':'실제')+'] '+slotTime(bk.s)+'–'+slotTime(bk.e+1)+'  '+esc(bk.text||'')+'</li>'); s+='</ul>'; } if(jr){ s+='<div style="white-space:pre-wrap;font-size:12px;margin-top:3px">'+esc(jr)+'</div>'; } if(pics.length){ s+='<div class="pimgs">'; pics.forEach(pd=>s+='<img class="pimg" src="'+pd+'">'); s+='</div>'; } s+='</div>'; dayParts.push(s); } if(dayParts.length){ P.push('<h3>Daily</h3>'); P.push(dayParts.join('')); } const habits=db.habits||[]; if(habits.length){ P.push('<h3>Tracker</h3><table><thead><tr><th></th>'); habits.forEach(hb=>P.push('<th>'+esc(hb.name)+'</th>')); P.push('</tr></thead><tbody>'); for(let d=1;d<=days;d++){ P.push('<tr><td>'+d+'</td>'); habits.forEach(hb=>{ const on=db.habitLog[habitLogKey(y,m,d,hb.id)]; P.push('<td>'+(on?'●':'')+'</td>'); }); P.push('</tr>'); } P.push('</tbody></table>'); } document.getElementById('printArea').innerHTML=P.join(''); window.print(); } finally { btn.textContent=orig; btn.disabled=false; } }
+async function exportPDF(){ const btn=document.getElementById('exportPdf'); const orig=btn.textContent; btn.disabled=true; btn.textContent='PDF 생성 중…'; try{ const y=viewMonth.y, m=viewMonth.m; const days=new Date(y,m+1,0).getDate(); const allIds=[]; for(let d=1;d<=days;d++){ const ids=db.photos[dayKey(y,m,d)]; if(ids&&ids.length) allIds.push(...ids); } if(allIds.length) btn.textContent='사진 불러오는 중…'; await Promise.all(allIds.filter(id=>!photoCache[id]).map(async id=>{ try{ const snap=await getDoc(doc(fdb,'journalPhotos',id)); if(snap.exists()) photoCache[id]=snap.data().data; }catch(e){ console.error(e); } })); btn.textContent='PDF 생성 중…'; const P=[]; P.push('<h2>'+y+' '+monthsK[m]+' · Bullet Journal</h2>'); const mtasks=db.months[monKey(y,m)]||[]; if(mtasks.length){ P.push('<h3>Monthly Log</h3><ul>'); mtasks.forEach(it=>P.push('<li>'+glyphText(it)+' '+esc(it.text)+(it.pri?' ★':'')+'</li>')); P.push('</ul>'); } const dayParts=[]; for(let d=1;d<=days;d++){ const k=dayKey(y,m,d); const tasks=db.days[k]||[]; const sc=(db.sched[k]||[]).slice().sort((a,b)=>a.s-b.s); const jr=[db.reflections[k],...allNotes(db).filter(n=>n.date===k).map(n=>n.title+'\n'+n.body)].filter(Boolean).join('\n\n'); const cal=db.cal2['c'+y+'-'+m+'-'+d]; const pics=(db.photos[k]||[]).map(id=>photoCache[id]).filter(Boolean); if(!tasks.length&&!sc.length&&!jr&&!cal&&!pics.length) continue; let s='<div class="pd"><div class="pdt">'+(m+1)+'/'+d+' ('+wdK[new Date(y,m,d).getDay()]+')</div>'; if(cal) s+='<div style="font-size:12px">· '+esc(cal)+'</div>'; if(tasks.length){ s+='<ul>'; tasks.forEach(it=>s+='<li>'+glyphText(it)+' '+esc(it.text)+(it.pri?' ★':'')+'</li>'); s+='</ul>'; } if(sc.length){ s+='<ul>'; sc.forEach(bk=>s+='<li>⏱ ['+(scheduleKind(bk)==='plan'?'계획':'실제')+'] '+slotTime(bk.s)+'–'+slotTime(bk.e+1)+'  '+esc(bk.text||'')+'</li>'); s+='</ul>'; } if(jr){ s+='<div style="white-space:pre-wrap;font-size:12px;margin-top:3px">'+esc(jr)+'</div>'; } if(pics.length){ s+='<div class="pimgs">'; pics.forEach(pd=>s+='<img class="pimg" src="'+pd+'">'); s+='</div>'; } s+='</div>'; dayParts.push(s); } if(dayParts.length){ P.push('<h3>Daily</h3>'); P.push(dayParts.join('')); } const habits=db.habits||[]; if(habits.length){ P.push('<h3>Tracker</h3><table><thead><tr><th></th>'); habits.forEach(hb=>P.push('<th>'+esc(hb.name)+'</th>')); P.push('</tr></thead><tbody>'); for(let d=1;d<=days;d++){ P.push('<tr><td>'+d+'</td>'); habits.forEach(hb=>{ const on=db.habitLog[habitLogKey(y,m,d,hb.id)]; P.push('<td>'+(on?'●':'')+'</td>'); }); P.push('</tr>'); } P.push('</tbody></table>'); } document.getElementById('printArea').innerHTML=P.join(''); window.print(); } finally { btn.textContent=orig; btn.disabled=false; } }
 
 /* Shared planned/actual schedule in daily and weekly views. */
 const keyOfDate=date=>dayKey(date.getFullYear(),date.getMonth(),date.getDate());
@@ -1159,7 +1159,7 @@ function renderWeekly(){
   document.getElementById('weekPicker').value=keyOfDate(viewWeek);
   renderSchedule(document.getElementById('weeklySchedule'),scheduleOptions(dates,true));
 }
-function refreshSchedules(){renderSched();renderWeekly();buildMiniCal();buildMonthGrid();}
+function refreshSchedules(){renderTagFilters();renderSched();renderWeekly();buildMiniCal();buildMonthGrid();}
 function openScheduleEditor(key,block){
   if(calendar.isBusy()){notify("Google 동기화 중이에요. 잠시 기다려 주세요.");return;}
   const before=block.id?(db.sched[key] || []).find(item=>item.id===block.id):null;
@@ -1170,6 +1170,10 @@ function openScheduleEditor(key,block){
   document.getElementById('scheduleKind').value=scheduleKind(block);
   document.getElementById('scheduleGoogle').checked=block.id?!!block.google:(scheduleKind(block)==='plan'&&calendar.defaultSend());
   document.getElementById('scheduleText').value=block.text;
+  const target=document.getElementById('scheduleCalendar');target.replaceChildren(new Option('설정의 기본 캘린더',''));for(const c of calendar.writableCalendars())target.add(new Option(c.summary,c.id));if(block.gc&&!Array.from(target.options).some(o=>o.value===block.gc.calendar))target.add(new Option(block.gc.calendar,block.gc.calendar));target.value=block.gc?.calendar||block.googleCalendar||'';target.disabled=!!block.gc;
+  scheduleEditing.tags=[...(block.tags||[])];notebook.picker(document.getElementById('scheduleTags'),scheduleEditing.tags,tags=>scheduleEditing.tags=tags);
+  document.getElementById('scheduleLinkState').textContent=block.google&&block.gc?'Google 연결됨 · 연결 대상: '+block.gc.calendar:block.google?(calendar.connected()?'Google 전송 대기':'Google 재연결 필요 · Desk에 저장됨'):'Desk에만 저장';
+  document.getElementById('scheduleGoogleDelete').hidden=!block.google;
   document.getElementById('scheduleColor').value=String((block.color || 0)%5);
   for(const [id,first,last,value] of [['scheduleStart',0,35,block.s],['scheduleEnd',1,36,block.e+1]]){
     const select=document.getElementById(id);select.textContent='';
@@ -1190,7 +1194,7 @@ document.getElementById('scheduleForm').onsubmit=async event=>{
   event.preventDefault();if(!scheduleEditorValid())return;
   const {key,block}=scheduleEditing,s=Number(document.getElementById('scheduleStart').value),e=Number(document.getElementById('scheduleEnd').value)-1;
   if(e<s){const error=document.getElementById('scheduleError');error.textContent='종료 시간은 시작 시간보다 늦어야 해요.';error.hidden=false;return;}
-  const updated={...block,id:block.id || genId(),s,e,kind:document.getElementById('scheduleKind').value,text:document.getElementById('scheduleText').value.trim(),color:Number(document.getElementById('scheduleColor').value),google:document.getElementById('scheduleGoogle').checked};
+  const updated={...block,id:block.id || genId(),s,e,kind:document.getElementById('scheduleKind').value,text:document.getElementById('scheduleText').value.trim(),color:Number(document.getElementById('scheduleColor').value),google:document.getElementById('scheduleGoogle').checked,tags:scheduleEditing.tags,googleCalendar:document.getElementById('scheduleCalendar').value};
   const editing=scheduleEditing;
   const submit=event.submitter; if(submit)submit.disabled=true;
   try { if(!await calendar.beforeSave(key,editing.before,updated))return; if(scheduleEditing!==editing||!scheduleEditorValid())return;
@@ -1202,9 +1206,17 @@ document.getElementById('scheduleCancel').onclick=()=>{document.getElementById('
 document.getElementById('scheduleDelete').onclick=()=>{
   if(!scheduleEditorValid() || !scheduleEditing.before)return;
   const {key,before}=scheduleEditing;
-  if(before.google){const error=document.getElementById('scheduleError');error.textContent='먼저 Google Calendar에 표시를 끄고 저장해 주세요. Google 원본 삭제를 확인한 다음 이 기록을 삭제할 수 있어요.';error.hidden=false;return;}
+  if(!confirm('Desk의 이 기록을 삭제할까요? 연결된 Google 원본은 남습니다.'))return;
   changeWithUndo('시간별 기록을 삭제했어요.',()=>{db.sched[key]=db.sched[key].filter(item=>item.id!==before.id);});
   document.getElementById('scheduleDialog').close();scheduleEditing=null;
+};
+document.getElementById('scheduleGoogleDelete').onclick=async()=>{
+ if(!scheduleEditorValid()||!scheduleEditing.before)return;
+ const editing=scheduleEditing;
+ try{if(!await calendar.deleteRemote(editing.before))return;if(editing!==scheduleEditing||!scheduleEditorValid())return;
+ const updated={...editing.before,google:false,googleVersion:(editing.before.googleVersion||0)+1};delete updated.gc;
+ saveSchedule(db,editing.key,updated);save();refreshSchedules();document.getElementById('scheduleDialog').close();scheduleEditing=null;
+ }catch(e){const error=document.getElementById('scheduleError');error.textContent=e.message;error.hidden=false;}
 };
 function shiftWeek(delta){viewWeek=new Date(viewWeek.getFullYear(),viewWeek.getMonth(),viewWeek.getDate()+7*delta);renderWeekly();}
 document.getElementById('weekPrev').onclick=()=>shiftWeek(-1);
@@ -1316,6 +1328,12 @@ const calendar=installCalendar({
 });
 
 
+const notebook=installNotebook({getData:()=>db,ready:()=>!!uid&&!!sync?.isReady()&&!sync?.getConflict(),save,getDate:()=>viewJournal?dayKey(viewJournal.y,viewJournal.m,viewJournal.d):keyOfDate(new Date()),onDate:key=>selectJournalDate(new Date(key+'T12:00:00')),refresh:()=>refreshSchedules()});
+const routineJournal=installRoutineJournal({auth,getDate:id=>{const v=id==='dailyEmpty'?viewDaily:viewJournal;return v?dayKey(v.y,v.m,v.d):keyOfDate(new Date());},reauthorize:()=>reauthenticateWithPopup(auth.currentUser,provider)});
+for(const id of ['dailySchedule','weeklySchedule','monthGrid']){const host=document.createElement('div');host.className='schedule-tag-filter';document.getElementById(id).before(host);}
+function renderTagFilters(){document.querySelectorAll('.schedule-tag-filter').forEach(host=>notebook.filterUI(host));}
+const previousBuildAll=buildAll;buildAll=function(){previousBuildAll();renderTagFilters();};
+window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==parent||event.data?.channel!=='personal-desk')return;if(event.data.type==='manage-tags')notebook.manage();});
 let deskContext=null;let applyingDeskContext=false;
 function applyDeskContext(ctx){
  document.body.classList.toggle('desk-today',ctx.view==='today');

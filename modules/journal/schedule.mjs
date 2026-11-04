@@ -1,3 +1,4 @@
+import {visibleByTags} from './notebook.mjs';
 export const SLOT_COUNT=36, SLOT_HEIGHT=26;
 export const scheduleKind=block=>block.kind === 'plan' ? 'plan' : 'actual';
 export function randomScheduleColor(random=Math.random) {
@@ -11,7 +12,7 @@ export function weekDates(date) {
   return Array.from({length:7},(_,i)=>new Date(monday.getFullYear(),monday.getMonth(),monday.getDate()+i));
 }
 export function scheduleItems(data,key,kind) {
-  return (data.sched[key] || []).filter(block=>scheduleKind(block)===kind).sort((a,b)=>a.s-b.s);
+  return (data.sched[key] || []).filter(block=>scheduleKind(block)===kind&&visibleByTags(data,block.tags)).sort((a,b)=>a.s-b.s);
 }
 export function slotTime(slot) {
   const minutes=360+slot*30;

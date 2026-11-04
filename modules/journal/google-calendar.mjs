@@ -66,7 +66,7 @@ export async function reconcile({api,uid,calendar,zone,min,max,getData,update,pe
   const set=async(before,fn)=>{assert();const now=current(before.block.id);if(!same(now,before))throw new Error('동기화 중 기록이 변경됐어요. 다시 시도해 주세요.');update(fn);if(!await persist())throw new Error('Firebase 저장을 먼저 완료해 주세요.');assert();};
   const snapshot=Object.entries(getData().sched||{}).flatMap(([key,list])=>list.map(block=>({key,block:copy(block)})));
   for(const before of snapshot){
-    assert();let {key,block}=before;if(!block.google||block.gc&&block.gc.calendar!==calendar)continue;
+    assert();let {key,block}=before;if(!block.google||(block.gc?.calendar||block.googleCalendar||calendar)!==calendar)continue;
     let event;
     if(!block.gc){
       const id=await exportEventId(uid,block);assert();event=await api.get(calendar,id);
@@ -100,18 +100,7 @@ export async function reconcile({api,uid,calendar,zone,min,max,getData,update,pe
   for(const event of events){
     const linked=Object.values(getData().sched||{}).flat().some(b=>b.gc?.calendar===calendar&&b.gc.eventId===event.id);
     if(linked)continue;
-    const item=importable(event,zone);if(!item){extras.push(event);continue;}
-    const pending=event.extendedProperties?.private?.bujoId&&current(event.extendedProperties.private.bujoId);
-    if(pending?.block.google&&!pending.block.gc){
-      if(event.id===await exportEventId(uid,pending.block)){
-        if(fingerprint(event)===fingerprint(payload(pending.key,pending.block,zone)))await set(copy(pending),data=>{data.sched[pending.key].find(b=>b.id===pending.block.id).gc={calendar,eventId:event.id,etag:event.etag,base:fingerprint(event)};});
-        else issues.push({id:pending.block.id,message:'다른 기기에서 등록한 일정과 달라요. Google 원본을 확인해 주세요.'});
-        continue;
-      }
-    }
-    const id='g'+await stableEventId(calendar,event.id);assert();
-    if(current(id))continue;
-    update(data=>{(data.sched[item.key]||=[]).push({id,s:item.s,e:item.e,text:item.text,kind:'plan',color:2,google:true,gc:{calendar,eventId:event.id,etag:event.etag,base:fingerprint(event)}});});
+    extras.push({...event,_calendar:calendar}); // Read-only until the user explicitly links this event.
   }
   if(!await persist())throw new Error('불러온 일정을 Firebase에 저장하지 못했어요.');assert();
   return {issues,extras};
