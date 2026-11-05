@@ -1,0 +1,165 @@
+/* Personal desk notebook — Bullet Journal format (2026-11). Loaded after redesign.css and notebook.css.
+   Dot-grid paper, mono signifiers, two-page daily spread, plan = tint / actual = pen outline. */
+:root{--paper:#FBFAF6;--paper2:#F4F3EE;--card:#FBFAF6;--ink:#17181B;--ink-soft:#66686E;--ink-2:#4E5056;--red:#2A52D1;--accent:#2A52D1;--tint:#E3E9FB;--plan-ink:#1B2F78;
+ --rule:#D6D5CE;--line:#D6D5CE;--dot:#C9C8C0;
+ --sans:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo',sans-serif;--mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;--serif:var(--sans);
+ --font-ui:var(--sans);--font-display:var(--sans);--font-meta:var(--mono)}
+html body{font-family:var(--sans)!important;color:var(--ink)!important}
+html:not(.in-desk) body{background-color:var(--paper)!important;background-image:radial-gradient(circle,var(--dot) 1px,transparent 1.4px)!important;background-size:16px 16px!important;background-position:8px 8px!important}
+html body button,html body input,html body select,html body textarea{font-family:inherit}
+
+/* Headings: mono, uppercase, underlined like a page header */
+html body .ph{font-family:var(--sans)!important;font-weight:600!important;font-size:26px!important;letter-spacing:-.01em!important}
+html body .sub,html body .hint,html body .sched-hint{font-size:12px!important;color:var(--ink-soft)!important}
+html body hr.rule{border:0!important;border-top:1.5px solid var(--ink)!important;margin:10px 0 16px!important}
+html body .section-label{font-family:var(--mono)!important;font-size:13px!important;font-weight:600!important;letter-spacing:.1em!important;text-transform:uppercase!important;color:var(--ink)!important;border-bottom:1px solid var(--ink)!important;padding:0 0 6px!important;margin:22px 0 6px!important;display:flex!important;justify-content:space-between!important;align-items:baseline!important;gap:12px}
+html body .section-label:first-child{margin-top:0!important}
+html body .section-label span,html body .section-label .reset{font-family:var(--mono)!important;font-size:10.5px!important;font-weight:400!important;letter-spacing:.12em!important;text-transform:uppercase!important;color:var(--ink-soft)!important}
+html body .section-label label{font:inherit!important;letter-spacing:inherit!important}
+html body .fold>summary{font-family:var(--mono)!important;font-size:13px!important;font-weight:600!important;letter-spacing:.1em!important;text-transform:uppercase!important;border-bottom:1px solid var(--ink)!important;padding-bottom:6px!important;min-height:32px}
+html body .fold{border:0!important;background:transparent!important;border-radius:0!important}
+
+/* Buttons: square, pen-and-paper */
+html body .navbtn,html body .authbtn,html body .reset.btn,html body .gc-chip{border-radius:2px!important;border:1px solid var(--line)!important;background:transparent!important;color:var(--ink)!important;min-height:36px;font-size:13px!important}
+html body .navbtn:hover,html body .authbtn:hover{background:var(--ink)!important;border-color:var(--ink)!important;color:var(--paper)!important}
+
+/* Quick log (rapid logging) */
+html body .adder{display:flex!important;align-items:center!important;gap:6px!important;border:0!important;background:transparent!important;padding:0!important;border-radius:0!important;box-shadow:none!important;margin:4px 0 22px!important}
+html body .adder .typebtn{width:44px!important;height:44px!important;border-radius:2px!important;border:1px solid var(--line)!important;background:var(--paper)!important;color:var(--ink)!important;font-family:var(--mono)!important;font-size:17px!important}
+html body .adder .typebtn.sel{background:var(--ink)!important;border-color:var(--ink)!important;color:var(--paper)!important}
+html body .adder input{flex:1!important;min-width:0;height:44px!important;border:0!important;border-bottom:1.5px solid var(--ink)!important;border-radius:0!important;background:transparent!important;padding:0 6px!important;font-size:14px!important}
+html body .adder .authbtn{height:44px!important;padding:0 22px!important;background:var(--accent)!important;border-color:var(--accent)!important;color:#fff!important;font-weight:500}
+html body .adder .authbtn:hover{background:var(--ink)!important;border-color:var(--ink)!important}
+
+/* Two-page spread */
+html body .daily-cols{gap:0!important;align-items:stretch!important}
+html body .daily-main{padding-right:32px!important}
+html body .daily-side{padding-left:32px!important}
+html body .daily-rule{width:1px!important;background:var(--rule)!important;border:0!important;margin:0!important}
+
+/* Rapid log rows: [★ margin] [bullet] [text] [refs] */
+html body ul.log{margin:0!important;padding:0!important}
+html body ul.log li{display:grid!important;grid-template-columns:20px 32px minmax(0,1fr) auto auto!important;align-items:center!important;gap:0 4px!important;min-height:32px!important;padding:0!important;border:0!important;background:transparent!important}
+html body ul.log li>.star{order:-1;grid-column:1;width:20px!important;font-size:13px!important;color:var(--accent)!important;opacity:0!important;background:none!important;border:0!important}
+html body ul.log li:hover>.star,html body ul.log li>.star:focus-visible{opacity:.35!important}
+html body ul.log li>.star.on{opacity:1!important}
+html body ul.log li>.bullet{grid-column:2;width:32px!important;height:32px!important;display:grid!important;place-items:center!important;font-family:var(--mono)!important;font-size:17px!important;line-height:1!important;color:var(--ink)!important;background:none!important;border:0!important;border-radius:2px!important}
+html body ul.log li>.bullet:hover:not(:disabled){background:var(--tint)!important}
+html body ul.log li>.bullet.red{color:var(--ink)!important}
+html body ul.log li>.itext{grid-column:3;font-size:14px!important;border:0!important;background:transparent!important;padding:4px 0!important}
+html body .itext.s-done,html body .itext.s-migrated,html body .itext.s-scheduled,html body .itext.s-strike{color:var(--ink-soft)!important;text-decoration:line-through!important;text-decoration-color:#A9AAAD!important}
+html body ul.log li>.tag{font-family:var(--mono)!important;font-size:11px!important;color:var(--ink-2)!important;background:transparent!important;border:0!important;padding:0 6px!important;border-radius:0!important}
+html body ul.log li>.item-menu{width:28px!important;opacity:.4;border:0!important;background-color:transparent!important;font-size:11px!important}
+html body ul.log li:hover>.item-menu{opacity:1}
+html body .tag-chip,html body .note-tag{border-radius:2px!important;font-family:var(--mono)!important;font-size:11px!important}
+
+/* First things first */
+html body .focus-list{display:flex!important;flex-direction:column!important;gap:0!important;margin:0 0 6px!important;padding:0!important}
+html body .focus-list li{list-style:none;margin:0!important;padding:0!important;border:0!important;background:transparent!important;box-shadow:none!important;min-height:0!important;width:auto!important}
+html body .focus-list li button{display:flex!important;align-items:center;gap:10px;width:100%;min-height:36px!important;padding:0 0 0 4px!important;border:0!important;background:transparent!important;text-align:left;font-size:14px!important;color:var(--ink)!important;border-radius:0!important}
+html body .focus-list li button::before{content:"★";color:var(--accent);font-family:var(--mono);font-size:13px;width:16px}
+html body .focus-list li button:hover{background:var(--tint)!important}
+
+/* Routine card inside the log */
+html body .routine-journal{border:1px solid var(--ink)!important;border-radius:0!important;background:var(--paper)!important;padding:12px 14px!important;margin:16px 0!important}
+html body .routine-journal h3{font-family:var(--mono)!important;font-size:12px!important;font-weight:600!important;letter-spacing:.1em;text-transform:uppercase;margin:0 0 4px!important}
+html body .routine-journal p{font-size:13px!important}
+html body .routine-journal a{color:var(--accent)!important;text-decoration:none!important}
+
+/* Migrate from earlier days */
+html body #backlogFold{margin-top:18px!important;padding:0!important}
+html body .backlog-row{display:grid!important;grid-template-columns:32px minmax(0,1fr) auto auto;align-items:center;gap:6px;min-height:40px;padding:0!important;border:0!important;background:transparent!important}
+html body .backlog-row::before{content:"•";font-family:var(--mono);font-size:17px;text-align:center}
+html body .backlog-row p{margin:0!important;font-size:14px!important;display:flex;gap:8px;align-items:baseline}
+html body .backlog-row small{font-family:var(--mono)!important;font-size:11px!important;color:var(--ink-soft)!important}
+html body .backlog-row .reset{min-height:32px;padding:0 10px!important;border:1px solid var(--line)!important;border-radius:2px!important;background:transparent!important;font-size:12px!important}
+html body .backlog-row .reset:first-of-type::before{content:"> "}
+html body .backlog-row .reset:hover{background:var(--ink)!important;color:var(--paper)!important}
+
+/* Habits: tracker boxes */
+html body .habit-chips{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(140px,1fr))!important;gap:0 12px!important}
+html body .habit-chip{display:flex!important;align-items:center!important;gap:10px!important;min-height:36px!important;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;color:var(--ink)!important;font-size:13px!important;text-align:left}
+html body .habit-chip::before{content:"";width:20px;height:20px;flex:none;border:1.5px solid var(--ink);box-sizing:border-box}
+html body .habit-chip[aria-pressed=true]::before{background:var(--ink)}
+
+/* One line a day: lined paper */
+html body textarea.reflection,html body textarea.note,html body .future textarea{border:0!important;border-bottom:1px solid var(--ink)!important;border-radius:0!important;background:transparent!important;background-image:repeating-linear-gradient(to bottom,transparent 0 31px,var(--rule) 31px 32px)!important;background-attachment:local!important;line-height:32px!important;padding:0 2px!important;font-family:var(--sans)!important;font-size:14px!important;box-shadow:none!important}
+html body textarea.reflection{min-height:96px!important}
+
+/* Schedule: plan = highlighter tint, actual = pen outline in its colour */
+html body .schedule-grid{border-radius:0!important;border-color:var(--rule)!important;background:transparent!important}
+html body .schedule-corner,html body .schedule-day-head,html body .schedule-labels{background:transparent!important;font-family:var(--mono)!important}
+html body .schedule-day-head{border-bottom:1px solid var(--ink)!important}
+html body .schedule-day-head.is-today{box-shadow:inset 0 2px 0 var(--accent)!important}
+html body .schedule-date{font-family:var(--mono)!important;font-size:11px!important;letter-spacing:.1em;text-transform:uppercase}
+html body .schedule-labels button{font-family:var(--mono)!important;font-size:10.5px!important;letter-spacing:.08em;border-radius:2px!important}
+html body .schedule-ruler span{font-family:var(--mono)!important;font-size:10.5px!important;color:var(--ink-soft)!important}
+html body .schedule-block{border-radius:0!important;border:0!important}
+html body .schedule-lane.plan .schedule-block{background:var(--tint)!important;box-shadow:none!important}
+html body .schedule-lane.plan .schedule-block .schedule-block-edit,html body .schedule-lane.plan .schedule-block small{color:var(--plan-ink)!important}
+html body .schedule-lane.actual .schedule-block{--pen:var(--ink);background:var(--paper)!important;box-shadow:inset 0 0 0 1.5px var(--pen)!important}
+html body .schedule-lane.actual .schedule-block.color-1{--pen:#4F7B6B}
+html body .schedule-lane.actual .schedule-block.color-2{--pen:#46677C}
+html body .schedule-lane.actual .schedule-block.color-3{--pen:#8E6B3F}
+html body .schedule-lane.actual .schedule-block.color-4{--pen:#6E5A8C}
+html body .schedule-lane.actual .schedule-block .schedule-block-edit{color:var(--ink)!important}
+html body .schedule-lane.actual .schedule-block small,html body .schedule-lane.actual .schedule-grip{color:var(--ink-soft)!important}
+html body .schedule-block-edit small{font-family:var(--mono)!important}
+
+/* Mini calendar */
+html body .minical,html body .mc-grid{font-family:var(--mono)!important}
+html body .mc-cell.today,html body .mc-cell.is-today{background:transparent!important;color:var(--accent)!important;box-shadow:inset 0 0 0 1.5px var(--accent)!important;border-radius:0!important}
+
+/* Monthly calendar */
+html body .month-grid{border-radius:0!important;border:0!important;border-top:1.5px solid var(--ink)!important;background:transparent!important}
+html body .mg-wd{font-family:var(--mono)!important;font-size:10.5px!important;letter-spacing:.12em;background:transparent!important;border-bottom:1px solid var(--ink)!important}
+html body .mg-wk{font-family:var(--mono)!important;background:transparent!important}
+html body .mg-cell{background:rgba(251,250,246,.72)!important;border-radius:0!important}
+html body .mg-cell:hover{box-shadow:inset 0 0 0 1.5px var(--ink)!important}
+html body .mg-num{font-family:var(--mono)!important;font-weight:500!important;background:transparent!important;color:var(--ink)!important;border-radius:0!important}
+html body .mg-cell.today,html body .mg-cell.is-today{background:var(--paper)!important;box-shadow:inset 0 0 0 2px var(--accent)!important}
+html body .mg-cell.today .mg-num,html body .mg-cell.is-today .mg-num{color:var(--accent)!important}
+html body .mg-cell.out,html body .mg-cell.pad,html body .mg-cell:empty{background:transparent!important}
+html body .mg-lines>*{font-size:11px!important}
+
+/* Future log */
+html body .future{gap:0 32px!important}
+html body .future h3,html body .future .fm,html body .future-month h3{font-family:var(--sans)!important;font-weight:600!important;font-size:16px!important;border-bottom:1px solid var(--ink)!important}
+
+/* Journal */
+html body .journal-sidebar,html body .journal-route-box,html body .journal-card{border-radius:0!important;background:transparent!important}
+html body .journal-route-box h3,html body .journal-sidebar h3{font-family:var(--mono)!important;font-size:12px!important;font-weight:600!important;letter-spacing:.1em;text-transform:uppercase;border-bottom:1px solid var(--ink);padding-bottom:6px}
+
+/* Key */
+html body .key-grid>div{display:flex;align-items:center;gap:12px;min-height:44px;border-bottom:1px solid var(--rule)}
+html body .key-grid .sym{width:40px;text-align:center;font-family:var(--mono)!important;font-size:20px!important;color:var(--ink)!important}
+html body .key-grid .sym.red{color:var(--accent)!important}
+html body .key-grid .sym.strike{color:var(--ink-soft)!important;text-decoration:line-through}
+
+/* Account bar and footer links */
+html body .authbar #connectionStatus,html body .authbar .authbtn{border-radius:2px!important;font-family:var(--mono)!important;font-size:11px!important}
+html body .gate{border-radius:0!important;border:1px solid var(--ink)!important;background:var(--paper)!important}
+html body dialog{border-radius:2px!important}
+
+@media(max-width:760px){
+ html body .daily-main{padding-right:0!important}
+ html body .daily-side{padding-left:0!important}
+ html body ul.log li{min-height:44px!important;grid-template-columns:16px 44px minmax(0,1fr) auto auto!important}
+ html body ul.log li>.bullet{width:44px!important;height:44px!important}
+ html body .habit-chips{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ html body .habit-chip{min-height:44px!important}
+}
+
+/* Specificity fixes over redesign.css */
+html body #daily>.adder{margin:4px 0 22px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important}
+html body #daily>.adder .typebtn{border:1px solid var(--line)!important}
+html body .habit-chip[aria-pressed="true"]{background:transparent!important;border-color:transparent!important;color:var(--ink)!important}
+html body ul.log li>.itext{width:100%!important;min-width:0!important}
+html body #backlogFold,html body #backlogFold>summary,html body #backlogList{background:transparent!important;border-radius:0!important}
+html body #backlogFold>summary{padding-left:0!important;padding-right:0!important}
+html body .focus-list{border:0!important;background:transparent!important;box-shadow:none!important;border-radius:0!important}
+@media(max-width:760px){
+ html body #daily>.adder{flex-wrap:wrap!important}
+ html body #daily>.adder input{order:5;flex:1 1 100%!important}
+ html body #daily>.adder .authbtn{margin-left:auto}
+}

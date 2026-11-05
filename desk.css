@@ -1,6 +1,7 @@
-/* Personal desk — monochrome notebook with bookmark tabs (2026-10 redesign). */
-:root{--ground:#EDEDEB;--paper:#FAFAF9;--card:#FFFFFF;--ink:#1A1A1A;--ink-2:#555552;--muted:#6B6B67;--faint:#8A8A86;--line:#DADAD6;--rule:#E6E6E3;--soft:#F3F3F1;--danger:#A3361C;--ok:#3F6B4F;
- --sans:Inter,'Noto Sans KR',system-ui,-apple-system,sans-serif;--serif:'Newsreader',Georgia,'Noto Serif KR',serif;
+/* Personal desk — dot-grid notebook with numbered bookmark tabs (2026-11 Bullet Journal redesign). */
+:root{--ground:#E9E8E3;--paper:#FBFAF6;--card:#FBFAF6;--ink:#17181B;--ink-2:#4E5056;--muted:#66686E;--faint:#8A8B8F;--line:#D6D5CE;--rule:#D6D5CE;--soft:#F4F3EE;--danger:#A3361C;--ok:#2F7A55;
+ --accent:#2A52D1;--tint:#E3E9FB;--dot:#C9C8C0;
+ --sans:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo',sans-serif;--mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;--serif:var(--sans);
  font-family:var(--sans);font-synthesis:none;color:var(--ink);background:var(--ground)}
 *{box-sizing:border-box}
 html,body{background:var(--ground)}
@@ -48,7 +49,8 @@ body[data-view=spending] .head-right,body[data-view=settings] .head-right{displa
 .date-controls .ibtn:hover{background:#EBEBE9;color:var(--ink)}
 .date-controls .now{height:38px;padding:0 14px;border:0;border-left:1px solid var(--rule);border-right:1px solid var(--rule);background:transparent;font-weight:500}
 .date-pick input{height:40px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 10px;font-size:13px;color:var(--ink-2)}
-.hidden-legacy,#week-strip{display:none!important}
+.hidden-legacy{display:none!important}
+body:not([data-view=today]) #week-strip{display:none!important}
 
 /* Content */
 #today-layout{display:flex;flex-direction:column;gap:28px}
@@ -105,5 +107,66 @@ body[data-view=journal][data-journal-connected=true] #journal-frame,body[data-vi
  #overview{grid-template-columns:1fr}
  .settings-grid{grid-template-columns:1fr}
  body[data-view=journal][data-journal-connected=true] #journal-frame,body[data-view=routine][data-routine-connected=true] #routine-frame{height:calc(100dvh - 200px)!important}
+}
+
+/* ── 2026-11 Bullet Journal redesign ─────────────────────────────── */
+.lbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em}
+.sheet{background-color:var(--paper);background-image:radial-gradient(circle,var(--dot) 1px,transparent 1.4px);background-size:16px 16px;background-position:8px 8px;border-radius:4px 0 0 4px;box-shadow:0 1px 2px rgba(23,24,27,.06),0 14px 36px rgba(23,24,27,.07)}
+.shell{padding:24px 0 24px 24px}
+main{padding:32px 48px 20px}
+.tabs-rail{padding-top:48px;width:52px;gap:4px}
+.rail-group{gap:4px}.rail-gap{height:20px}
+.tabs-rail a{width:40px;padding:12px 0;border-color:var(--line);border-radius:0 6px 6px 0;background:var(--soft);color:var(--ink-2);font-family:var(--mono);font-size:10.5px;letter-spacing:.08em}
+.tabs-rail a:hover{width:44px}
+.tab-n{font-weight:400;color:var(--muted);margin-inline-end:10px}
+.tabs-rail a[aria-current=page],body[data-view=today] .tabs-rail a[data-view=today],body[data-view=journal] .tabs-rail a[data-view=today]{width:46px;background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.tabs-rail a[aria-current=page] .tab-n,body[data-view=today] .tabs-rail a[data-view=today] .tab-n,body[data-view=journal][data-journal-tab=daily] .tabs-rail a[data-view=today] .tab-n{color:var(--paper)}
+body[data-view=journal]:not([data-journal-tab=daily]) .tabs-rail a[data-view=today]{width:40px;background:var(--soft);border-color:var(--line);color:var(--ink-2)}
+.sheet-head{border-bottom:1.5px solid var(--ink);padding-bottom:14px}
+.date-head{align-items:flex-end;gap:18px}
+.big-date{font-family:var(--mono);font-weight:500;font-size:72px;line-height:.86;letter-spacing:-.05em}
+.big-meta{flex-direction:column-reverse;gap:4px;padding-bottom:2px}
+.big-meta span:last-child{font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.big-meta span:first-child{display:inline-block;font-size:24px;font-weight:600;letter-spacing:0;line-height:1.1;text-transform:lowercase}
+.big-meta span:first-child::first-letter{text-transform:uppercase}
+.view-title{font-family:var(--sans);font-weight:600;font-size:32px;letter-spacing:-.01em}
+.view-title .title-dot{display:none}
+.date-controls{border:0;background:transparent;gap:6px;height:auto;overflow:visible}
+.date-controls .ibtn,.date-controls .now{height:40px;border:1px solid var(--line);border-radius:2px;background:transparent;color:var(--ink)}
+.date-controls .ibtn{width:40px}
+.date-controls .now{border-color:var(--ink);background:var(--paper);padding:0 16px}
+.date-controls .ibtn:hover,.date-controls .now:hover{background:var(--ink);color:var(--paper)}
+.date-pick input{border-radius:2px;background:transparent;font-family:var(--mono);height:40px}
+#week-strip{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:-8px}
+#week-strip button{width:52px;min-height:52px;border:1px solid transparent;border-radius:2px;background:transparent;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;color:var(--ink)}
+#week-strip button:hover{border-color:var(--line)}
+#week-strip button[aria-pressed=true]{border:1.5px solid var(--ink);background:var(--paper)}
+#week-strip span{font-family:var(--mono);font-size:10px;letter-spacing:.12em;color:var(--muted)}
+#week-strip b{font-family:var(--mono);font-size:14px;font-weight:500}
+#overview{border-top:1px solid var(--line)}
+.summary-card,.settings-card{border:1px solid var(--ink);border-radius:0;background:var(--paper)}
+.summary-card h2,.settings-card h2{font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:.1em;text-transform:uppercase}
+.settings-card h2{border-bottom:1px solid var(--ink);padding-bottom:6px}
+.summary-value{font-family:var(--mono);font-weight:500;font-size:32px;letter-spacing:-.02em}
+.summary-value small{font-family:var(--mono)}
+.quick-actions button{height:32px;border-radius:2px;border-color:var(--line);background:transparent;font-size:12px;font-weight:500}
+.quick-actions button:hover{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.frame-loading,.frame-fallback,#notice,.host-notice{border-radius:2px}
+.desk-footer{font-family:var(--mono);letter-spacing:.06em;border-top-color:var(--line)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline-color:var(--accent)}
+@media(max-width:640px){
+ .shell{padding:0}
+ .sheet{border-radius:0}
+ main{padding:24px 14px 24px 16px}
+ .tabs-rail{width:36px;padding-top:96px;gap:3px}
+ .tabs-rail a,.tabs-rail a:hover{width:30px;min-height:72px;padding:10px 0;border-radius:0 5px 5px 0;font-size:10px;letter-spacing:.12em}
+ .tabs-rail a[aria-current=page],body[data-view=today] .tabs-rail a[data-view=today],body[data-view=journal] .tabs-rail a[data-view=today]{width:34px;min-height:72px}
+ body[data-view=journal]:not([data-journal-tab=daily]) .tabs-rail a[data-view=today]{width:30px;min-height:72px}
+ .tab-n{display:none}
+ .big-date{font-size:56px}
+ .big-meta span:first-child{font-size:19px}
+ #week-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:2px}
+ #week-strip button{width:auto;min-height:48px}
+ body:not([data-view=today]) #week-strip{display:none!important}
 }
 @media print{.tabs-rail,.sheet-head,#overview,.desk-footer{display:none}.shell{padding:0}.sheet{box-shadow:none}main{padding:0}}

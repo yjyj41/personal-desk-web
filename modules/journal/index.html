@@ -248,10 +248,11 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 .monthly-route-credit{margin-top:8px;font-size:10px;color:var(--ink-soft)}
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500&amp;family=Inter:wght@400;500;600&amp;family=Noto+Sans+KR:wght@400;500&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261104a">
-<link rel="stylesheet" href="./redesign.css?v=20261104a">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans+KR:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link rel="stylesheet" href="./desk.css?v=20261104b">
+<link rel="stylesheet" href="./redesign.css?v=20261104b">
 <link rel="stylesheet" href="./notebook.css?v=20261104">
+<link rel="stylesheet" href="./bujo.css?v=20261104b">
 </head>
 <body>
 <div class="book">
@@ -355,13 +356,13 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 <hr class="rule">
 <div class="key-grid">
 <div><span class="sym">&bull;</span> 할 일 (Task)</div>
-<div><span class="sym">Done</span> 완료 (Done)</div>
-<div><span class="sym">Move</span> 이동 — 다음 날로 복사 (Migrated)</div>
-<div><span class="sym">예정</span> 예정 (Scheduled)</div>
+<div><span class="sym">&times;</span> 완료 (Done)</div>
+<div><span class="sym">&gt;</span> 이동 — 다음 날로 복사 (Migrated)</div>
+<div><span class="sym">&lt;</span> 예정 (Scheduled)</div>
 <div><span class="sym">&#9675;</span> 이벤트 (Event)</div>
 <div><span class="sym">&ndash;</span> 메모 (Note)</div>
 <div><span class="sym red">★</span> 우선순위 (Priority)</div>
-<div><span class="sym">~~</span> 취소선 (Irrelevant)</div>
+<div><span class="sym strike">&bull;</span> 취소선 (Irrelevant)</div>
 </div>
 <p class="hint" style="margin-top:14px">Ryder Carroll의 Bullet Journal Method를 따릅니다. 핵심은 빠르게, 짧게 적는 것.</p>
 </section>
@@ -392,18 +393,18 @@ Synced to your account ·
 import {installNotebook} from './notebook-ui.mjs';
 import {allNotes,visibleByTags} from './notebook.mjs';
 import {installRoutineJournal} from '../../shared/routine-journal.mjs';
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261104a';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261104b';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261104a';
-import {createJournalSync} from './journal-sync.mjs?v=20261104a';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261104a';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261104a';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261104a';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261104b';
+import {createJournalSync} from './journal-sync.mjs?v=20261104b';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261104b';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261104b';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261104b';
 import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
-import {installFrame} from '../../shared/frame.mjs?v=20261104a';
+import {installFrame} from '../../shared/frame.mjs?v=20261104b';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -598,7 +599,7 @@ function buildAll(){
 }
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{ document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active')); document.querySelectorAll('.panel').forEach(x=>x.classList.remove('active')); t.classList.add('active'); document.getElementById(t.dataset.p).classList.add('active'); if(t.dataset.p==='weekly')renderWeekly(); if(t.dataset.p==='daily')renderSched(); if(t.dataset.p==='monthly')renderMonthly(); });
 
-function glyph(it){ if(it.type==='note') return {ch:'–',red:false}; if(it.type==='event') return {ch: it.status==='done'?'✓':'○', red:false}; switch(it.status){ case 'done': return {ch:'✓',red:false}; case 'migrated': return {ch:'›',red:true}; case 'scheduled': return {ch:'‹',red:true}; case 'strike': return {ch:'•',red:false}; default: return {ch:'•',red:false}; } }
+function glyph(it){ if(it.type==='note') return {ch:'–',red:false}; if(it.type==='event') return {ch: it.status==='done'?'×':'○', red:false}; switch(it.status){ case 'done': return {ch:'×',red:false}; case 'migrated': return {ch:'>',red:true}; case 'scheduled': return {ch:'<',red:true}; case 'strike': return {ch:'•',red:false}; default: return {ch:'•',red:false}; } }
 function statusClass(it){ if(it.status==='done') return 's-done'; if(it.status==='strike') return 's-strike'; if(it.status==='migrated') return 's-migrated'; if(it.status==='scheduled') return 's-scheduled'; return ''; }
 function curList(name){
   if(name==='daily'){ const k=dayKey(viewDaily.y,viewDaily.m,viewDaily.d); db.days[k]=db.days[k]||[]; return db.days[k]; }
@@ -880,7 +881,7 @@ function renderToday() {
   if (!priorities.length) { const li=document.createElement('li'); li.className='empty-copy'; li.textContent='중요한 할 일에 별표를 해보세요.'; focus.append(li); }
   for (const item of priorities) {
     const li=document.createElement('li'), button=document.createElement('button');
-    button.textContent='○  '+item.text; button.setAttribute('aria-label',item.text+' 완료');
+    button.textContent=item.text; button.setAttribute('aria-label',item.text+' 완료');
     button.onclick=() => changeWithUndo('완료했어요.',() => { item.status='done'; }); li.append(button); focus.append(li);
   }
   const backlog=previousOpenTasks(db,key);
@@ -902,7 +903,7 @@ function renderToday() {
     const logKey=habitLogKey(viewDaily.y,viewDaily.m,viewDaily.d,habit.id), checked=!!db.habitLog[logKey];
     if (checked) done++;
     const button=document.createElement('button'); button.className='habit-chip'; button.setAttribute('aria-pressed',String(checked));
-    button.textContent=(checked?'✓ ':'○ ')+habit.name;
+    button.textContent=habit.name;
     button.onclick=() => { if (db.habitLog[logKey]) delete db.habitLog[logKey]; else db.habitLog[logKey]=true; save(); buildHabit(); };
     habits.append(button);
   }
@@ -1138,7 +1139,7 @@ async function removePhoto(k,id) {
   });
 }
 function openLightbox(src){ const lb=document.getElementById('lightbox'); lb.querySelector('img').src=src; lb.style.display='flex'; }
-function glyphText(it){ if(it.type==='note')return '–'; if(it.type==='event')return it.status==='done'?'✓○':'○'; switch(it.status){case 'done':return '✓';case 'migrated':return '›';case 'scheduled':return '‹';case 'strike':return '✗';default:return '•';} }
+function glyphText(it){ if(it.type==='note')return '–'; if(it.type==='event')return it.status==='done'?'✓○':'○'; switch(it.status){case 'done':return '×';case 'migrated':return '>';case 'scheduled':return '<';case 'strike':return '✗';default:return '•';} }
 async function exportPDF(){ const btn=document.getElementById('exportPdf'); const orig=btn.textContent; btn.disabled=true; btn.textContent='PDF 생성 중…'; try{ const y=viewMonth.y, m=viewMonth.m; const days=new Date(y,m+1,0).getDate(); const allIds=[]; for(let d=1;d<=days;d++){ const ids=db.photos[dayKey(y,m,d)]; if(ids&&ids.length) allIds.push(...ids); } if(allIds.length) btn.textContent='사진 불러오는 중…'; await Promise.all(allIds.filter(id=>!photoCache[id]).map(async id=>{ try{ const snap=await getDoc(doc(fdb,'journalPhotos',id)); if(snap.exists()) photoCache[id]=snap.data().data; }catch(e){ console.error(e); } })); btn.textContent='PDF 생성 중…'; const P=[]; P.push('<h2>'+y+' '+monthsK[m]+' · Bullet Journal</h2>'); const mtasks=db.months[monKey(y,m)]||[]; if(mtasks.length){ P.push('<h3>Monthly Log</h3><ul>'); mtasks.forEach(it=>P.push('<li>'+glyphText(it)+' '+esc(it.text)+(it.pri?' ★':'')+'</li>')); P.push('</ul>'); } const dayParts=[]; for(let d=1;d<=days;d++){ const k=dayKey(y,m,d); const tasks=db.days[k]||[]; const sc=(db.sched[k]||[]).slice().sort((a,b)=>a.s-b.s); const jr=[db.reflections[k],...allNotes(db).filter(n=>n.date===k).map(n=>n.title+'\n'+n.body)].filter(Boolean).join('\n\n'); const cal=db.cal2['c'+y+'-'+m+'-'+d]; const pics=(db.photos[k]||[]).map(id=>photoCache[id]).filter(Boolean); if(!tasks.length&&!sc.length&&!jr&&!cal&&!pics.length) continue; let s='<div class="pd"><div class="pdt">'+(m+1)+'/'+d+' ('+wdK[new Date(y,m,d).getDay()]+')</div>'; if(cal) s+='<div style="font-size:12px">· '+esc(cal)+'</div>'; if(tasks.length){ s+='<ul>'; tasks.forEach(it=>s+='<li>'+glyphText(it)+' '+esc(it.text)+(it.pri?' ★':'')+'</li>'); s+='</ul>'; } if(sc.length){ s+='<ul>'; sc.forEach(bk=>s+='<li>⏱ ['+(scheduleKind(bk)==='plan'?'계획':'실제')+'] '+slotTime(bk.s)+'–'+slotTime(bk.e+1)+'  '+esc(bk.text||'')+'</li>'); s+='</ul>'; } if(jr){ s+='<div style="white-space:pre-wrap;font-size:12px;margin-top:3px">'+esc(jr)+'</div>'; } if(pics.length){ s+='<div class="pimgs">'; pics.forEach(pd=>s+='<img class="pimg" src="'+pd+'">'); s+='</div>'; } s+='</div>'; dayParts.push(s); } if(dayParts.length){ P.push('<h3>Daily</h3>'); P.push(dayParts.join('')); } const habits=db.habits||[]; if(habits.length){ P.push('<h3>Tracker</h3><table><thead><tr><th></th>'); habits.forEach(hb=>P.push('<th>'+esc(hb.name)+'</th>')); P.push('</tr></thead><tbody>'); for(let d=1;d<=days;d++){ P.push('<tr><td>'+d+'</td>'); habits.forEach(hb=>{ const on=db.habitLog[habitLogKey(y,m,d,hb.id)]; P.push('<td>'+(on?'●':'')+'</td>'); }); P.push('</tr>'); } P.push('</tbody></table>'); } document.getElementById('printArea').innerHTML=P.join(''); window.print(); } finally { btn.textContent=orig; btn.disabled=false; } }
 
 /* Shared planned/actual schedule in daily and weekly views. */

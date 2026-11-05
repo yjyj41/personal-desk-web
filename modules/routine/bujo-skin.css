@@ -1,0 +1,7 @@
+/* Personal desk — Bullet Journal skin for the compiled Routine bundle (2026-11).
+   Colours and type only: the bundle's layout and bootstrap are unchanged. */
+@import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans+KR:wght@400;500;600&display=swap');
+:root,.dark{--background:#FBFAF6;--foreground:#17181B;--primary:#17181B;--primary-foreground:#FBFAF6;--border:#D6D5CE;--muted:#F4F3EE;--muted-foreground:#66686E;--card:#FBFAF6;--card-foreground:#17181B;--accent:#E3E9FB;--accent-foreground:#1B2F78;--destructive:#A3361C;--radius:2px;
+ --font-ui:'IBM Plex Sans KR',system-ui,-apple-system,'Apple SD Gothic Neo',sans-serif;--font-sans:var(--font-ui);--font-display:'IBM Plex Sans KR',system-ui,sans-serif;--font-meta:'IBM Plex Mono',ui-monospace,monospace;--font-mono:'IBM Plex Mono',ui-monospace,monospace;--default-font-family:var(--font-ui)}
+html,body{font-family:var(--font-ui)}
+h1,h2,h3{font-family:var(--font-display);font-weight:600;letter-spacing:-.01em}
