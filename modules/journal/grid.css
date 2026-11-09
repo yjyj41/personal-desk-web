@@ -213,3 +213,7 @@ html body .notebook{border-top:3px double var(--ink-2)}
 html body .note-card,html body .routine-journal{border:1px solid var(--line)!important;border-radius:0!important;background:var(--card)}
 html body .tag-picks label{border-radius:2px!important;font:500 10px var(--mono)}
 html body .notebook input,html body .notebook select,html body .notebook-dialog input,html body .notebook-dialog select,html body .notebook-dialog textarea{border-radius:2px!important;border-color:var(--line)!important}
+/* Google Calendar settings: three plain steps */
+html body .gc-steps{margin:8px 0 12px;padding-left:18px;font-size:12.5px;line-height:1.7;color:var(--ink-2)}
+html body .gc-steps b{font:600 11px var(--mono);letter-spacing:.04em;color:var(--ink)}
+html body .gc-extras-fold{margin-top:10px}

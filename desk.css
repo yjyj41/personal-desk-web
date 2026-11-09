@@ -30,7 +30,8 @@ main{padding:34px 40px 22px;outline:none;display:flex;flex-direction:column;gap:
 .tabs-rail a:hover{width:36px;color:var(--ink)}
 .tabs-rail a[aria-current=page]{background:var(--ink);border-color:var(--ink);color:#fff;width:38px;font-weight:600}
 body[data-view=today] .tabs-rail a[data-view=today],
-body[data-view=journal][data-journal-tab=daily] .tabs-rail a[data-view=today]{background:var(--ink);border-color:var(--ink);color:#fff;width:38px;font-weight:600}
+body[data-view=journal][data-journal-tab=daily] .tabs-rail a[data-view=today],
+body[data-view=journal][data-journal-tab=index] .tabs-rail a[data-view=settings],body[data-view=journal][data-journal-tab=key] .tabs-rail a[data-view=settings]{background:var(--ink);border-color:var(--ink);color:#fff;width:38px;font-weight:600}
 
 /* Header */
 .sheet-head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;padding-bottom:14px;border-bottom:3px double var(--ink-2)}
@@ -94,6 +95,9 @@ iframe{display:block;border:0;width:100%;height:330px;background:transparent}
 .settings-card p,.settings-card li{font-size:13px;color:var(--ink-2);line-height:1.7}
 .settings-card dt{font-weight:600;font-size:13px}.settings-card dd{font-size:12px;color:var(--muted);margin:2px 0 10px}
 .settings-links{display:flex;gap:20px;font:500 11px var(--mono)}.settings-links a{color:var(--accent)}
+.settings-card .text-link{font:500 11px var(--mono)}
+.back-settings{display:none;font:500 10px var(--mono);letter-spacing:.08em;text-transform:uppercase;color:var(--accent)}
+body[data-view=journal][data-journal-tab=index] .back-settings,body[data-view=journal][data-journal-tab=key] .back-settings{display:inline-block}
 
 .desk-footer{margin-top:auto;padding-top:12px;border-top:1px solid var(--rule);display:flex;justify-content:space-between;font:500 9.5px var(--mono);letter-spacing:.08em;color:var(--muted);font-variant-numeric:tabular-nums}
 body[data-view=journal][data-journal-connected=true] #journal-frame,body[data-view=routine][data-routine-connected=true] #routine-frame{height:calc(100dvh - 250px)!important;min-height:520px}
@@ -111,7 +115,7 @@ body[data-view=journal][data-journal-connected=true] #journal-frame,body[data-vi
  .rail-group{gap:3px}.rail-gap{height:8px}
  .tabs-rail a,.tabs-rail a:hover{width:26px;padding:9px 0;font-size:8.5px}
  .tabs-rail a b{margin-bottom:5px}
- .tabs-rail a[aria-current=page],body[data-view=today] .tabs-rail a[data-view=today],body[data-view=journal][data-journal-tab=daily] .tabs-rail a[data-view=today]{width:30px}
+ .tabs-rail a[aria-current=page],body[data-view=today] .tabs-rail a[data-view=today],body[data-view=journal][data-journal-tab=daily] .tabs-rail a[data-view=today],body[data-view=journal][data-journal-tab=index] .tabs-rail a[data-view=settings],body[data-view=journal][data-journal-tab=key] .tabs-rail a[data-view=settings]{width:30px}
  .sheet-head{padding-bottom:10px;gap:10px}
  .big-date{font-size:42px}.date-head{gap:10px}
  .big-meta span:last-child{font-size:16px}

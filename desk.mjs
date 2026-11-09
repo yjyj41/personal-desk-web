@@ -1,7 +1,8 @@
-import {dateKey,validDate,shiftDay,mondayOf} from './shared/dates.mjs?v=20261109a';
-import {parseRoute,journalViews} from './shared/navigation.mjs?v=20261109a';
+import {dateKey,validDate,shiftDay,mondayOf} from './shared/dates.mjs?v=20261109b';
+import {parseRoute,journalViews} from './shared/navigation.mjs?v=20261109b';
 const $=id=>document.getElementById(id),modules=['journal','routine'];
 const labels={today:['Today','Your daily log, with the week and month alongside.'],journal:['Journal','Your complete notebook. Eight views, the same records.'],routine:['Routine','Exercise, meals and sleep. Plan it, then log it.'],settings:['Settings','Connections, storage and backups.']};
+const notebookPages={index:['Index','Settings · every page and topic in one list.'],key:['Key','Settings · what each bullet means.']};
 let selected=dateKey(),view='today',journalTab='daily',pendingAction=null,routineInteractive=false,lastRoutine=null;
 const ready=new Set();
 function isoWeek(d){const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));const day=t.getUTCDay()||7;t.setUTCDate(t.getUTCDate()+4-day);const y=new Date(Date.UTC(t.getUTCFullYear(),0,1));return Math.ceil(((t-y)/864e5+1)/7);}
@@ -52,11 +53,13 @@ function route(){
  window.scrollTo({top:0,behavior:'instant'});
  const route=parseRoute(location.hash);view=route.view;journalTab=route.tab;
  document.body.dataset.view=view;document.title=labels[view][0]+' · Personal desk';
- $('title').replaceChildren(document.createTextNode(labels[view][0]));const dot=document.createElement('span');dot.className='title-dot';dot.textContent='.';$('title').append(dot);$('subtitle').textContent=labels[view][1];updateNavigation();
+ // Index and Key live under Settings: they keep the journal frame but take Settings' tab and a page title.
+ const page=view==='journal'&&notebookPages[journalTab];if(page)document.title=page[0]+' · Personal desk';
+ $('title').replaceChildren(document.createTextNode(page?page[0]:labels[view][0]));const dot=document.createElement('span');dot.className='title-dot';dot.textContent='.';$('title').append(dot);$('subtitle').textContent=page?page[1]:labels[view][1];updateNavigation();
  $('period').textContent=new Date(selected+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
  $('today-layout').hidden=!['today','journal'].includes(view);$('today-layout').classList.toggle('full',view==='journal');$('overview').hidden=view!=='today';
  for(const m of ['routine','settings'])$(m+'-panel').hidden=view!==m;
- if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261109a';
+ if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261109b';
  send('journal');send('routine',view==='routine'&&routineInteractive?pendingAction:undefined);
  if(view==='routine'&&routineInteractive)pendingAction=null;
 }
@@ -81,3 +84,4 @@ try{const old=localStorage.getItem('personal_desk_spending_v1');if(old){$('old-s
 window.addEventListener('hashchange',route);setDate(selected);route();
 
 $('manage-tags').onclick=()=>{location.hash='journal/journal';$('journal-frame').contentWindow.postMessage({channel:'personal-desk',type:'manage-tags'},location.origin);};
+$('calendar-settings').onclick=()=>{location.hash='journal/monthly';$('journal-frame').contentWindow.postMessage({channel:'personal-desk',type:'calendar-settings'},location.origin);};

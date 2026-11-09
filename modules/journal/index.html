@@ -249,10 +249,10 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261109a">
-<link rel="stylesheet" href="./redesign.css?v=20261109a">
+<link rel="stylesheet" href="./desk.css?v=20261109b">
+<link rel="stylesheet" href="./redesign.css?v=20261109b">
 <link rel="stylesheet" href="./notebook.css?v=20261104">
-<link rel="stylesheet" href="./grid.css?v=20261109a">
+<link rel="stylesheet" href="./grid.css?v=20261109b">
 </head>
 <body>
 <div class="book">
@@ -322,7 +322,6 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 </div>
 <details class="fold" id="monthLinesFold"><summary>One line a day</summary><p class="hint">Write a short line for each day. It shows in the calendar above.</p><ul class="cal" id="calList"></ul></details>
 <div id="googleCalendarPanel"></div>
-<details class="fold" id="gcEmbedFold"><summary>Google Calendar</summary><p class="hint">Your Google Calendar as Google shows it. You need to be signed in to Google in this browser. Two-way sync of schedule blocks is set up in “Google Calendar 연동” at the top of the notebook.</p><div id="gcEmbed"></div></details>
 <details class="fold" id="monthlyRouteFold"><summary id="monthlyRouteTitle">Places this month</summary><div id="monthlyRoutes"></div></details>
 </section>
 <section class="panel" id="future">
@@ -379,7 +378,7 @@ Synced to your account ·
 <dialog id="scheduleDialog"><form id="scheduleForm">
 <h2 id="scheduleDialogTitle">Schedule</h2><p id="scheduleDialogDate"></p>
 <label class="schedule-field">구분<select id="scheduleKind"><option value="plan">Plan</option><option value="actual">Actual</option></select></label>
-<label class="hint"><input type="checkbox" id="scheduleGoogle"> 이 일정만 Google과 연결</label><p class="hint">연결을 꺼도 양쪽 일정은 남습니다. Google 원본 삭제는 별도 버튼을 사용하세요.</p>
+<label class="hint"><input type="checkbox" id="scheduleGoogle"> Google에도 저장</label><p class="hint">켜면 이 블록만 Google 캘린더에 올라가고 양쪽 수정이 맞춰져요. 꺼도 양쪽 일정은 남아요.</p>
 <label class="schedule-field">Details<textarea id="scheduleText" rows="3" placeholder="What are you planning? What happened?"></textarea></label>
 <div class="schedule-times"><label class="schedule-field">Start<select id="scheduleStart"></select></label><label class="schedule-field">End<select id="scheduleEnd"></select></label></div>
 <label class="schedule-field">Colour<select id="scheduleColor"><option value="0">Red</option><option value="1">Green</option><option value="2">Blue</option><option value="3">Ochre</option><option value="4">Purple</option></select></label>
@@ -393,23 +392,25 @@ Synced to your account ·
 import {installNotebook} from './notebook-ui.mjs';
 import {allNotes,visibleByTags} from './notebook.mjs';
 import {installRoutineJournal} from '../../shared/routine-journal.mjs';
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261109a';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261109b';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261109a';
-import {createJournalSync} from './journal-sync.mjs?v=20261109a';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261109a';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261109a';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261109a';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261109b';
+import {createJournalSync} from './journal-sync.mjs?v=20261109b';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261109b';
+import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261109b';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261109b';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261109b';
 import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
-import {installFrame} from '../../shared/frame.mjs?v=20261109a';
+import {installFrame} from '../../shared/frame.mjs?v=20261109b';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const fdb = getFirestore(app);
 const provider = new GoogleAuthProvider();
+const loginProvider = new GoogleAuthProvider(); CALENDAR_SCOPES.forEach(scope=>loginProvider.addScope(scope));
 let db = emptyJournal();
 let viewWeek=null; let scheduleEditing=null;
 let journalMonth=null;
@@ -536,7 +537,8 @@ async function connectUser(user) {
 document.getElementById('signInBtn').onclick = document.getElementById('gateSignIn').onclick =
   async () => {
     const button=document.getElementById('gateSignIn'),headerButton=document.getElementById('signInBtn'),error=document.getElementById('authError');error.hidden=true;button.disabled=true;headerButton.disabled=true;
-    try{const result=await signInWithPopup(auth,provider);try{await routineJournal.accept(result);}catch(e){notify('저널 로그인 완료 · 운동 연결은 다시 시도해 주세요: '+e.message);}}catch(e){error.textContent=authErrorMessage(e);error.hidden=false;}finally{button.disabled=false;headerButton.disabled=false;}
+    // One Google sign-in: journal, routine and calendar (view and opted-in blocks) together.
+    try{const result=await signInWithPopup(auth,loginProvider);calendar.adopt(GoogleAuthProvider.credentialFromResult(result)?.accessToken).catch(e=>console.error(e));try{await routineJournal.accept(result);}catch(e){notify('저널 로그인 완료 · 운동 연결은 다시 시도해 주세요: '+e.message);}}catch(e){error.textContent=authErrorMessage(e);error.hidden=false;}finally{button.disabled=false;headerButton.disabled=false;}
   };
 document.getElementById('signOutBtn').onclick = async () => {
   if (signingOut) return;
@@ -616,7 +618,6 @@ function renderMonthly(){
   document.getElementById('monthTitle').textContent=monthsK[viewMonth.m]+' '+viewMonth.y;
   buildCal(); buildMonthGrid(); loadMonthGoogle();
   document.getElementById('calList').onchange=()=>buildMonthGrid();
-  if(document.getElementById('gcEmbedFold').open)renderGoogleEmbed();
   updateMonthlyRouteTitle();
   if(document.getElementById('monthlyRouteFold').open)renderMonthlyRoutes();
 }
@@ -674,8 +675,8 @@ function buildGcFilter(){
     box2.onchange=()=>{ const set=new Set(db.googleCalendar?.hidden||[]); if(box2.checked) set.delete(c.id); else set.add(c.id); db.googleCalendar={...(db.googleCalendar||{}),hidden:[...set]}; save(); buildMonthGrid(); };
     label.append(box2,dot,name); list.append(label);
   }
-  const more=document.createElement('button'); more.type='button'; more.className='gc-filter-more'; more.textContent='Sync settings…';
-  more.onclick=()=>{ document.getElementById('gcFilter').open=false; const d=document.querySelector('#googleCalendarPanel details'); if(d){ d.open=true; d.scrollIntoView({behavior:'smooth',block:'start'}); } };
+  const more=document.createElement('button'); more.type='button'; more.className='gc-filter-more'; more.textContent='Calendar settings…';
+  more.onclick=()=>{ document.getElementById('gcFilter').open=false; calendar.open(); };
   list.append(more);
 }
 document.addEventListener('click',e=>{const f=document.getElementById('gcFilter');if(f?.open&&!f.contains(e.target))f.open=false;});
@@ -745,7 +746,7 @@ function openDayDetail(y,m,d){
   const one=db.cal2['c'+y+'-'+m+'-'+d], refl=db.reflections[k];
   if(one||refl){empty=false;const s=section('One line');if(one)row(s,'—',one,'serif');if(refl&&refl!==one)row(s,'“',refl,'serif');}
   const gev=googleEventsOn(k);
-  if(gev.length){empty=false;const s=section('Google Calendar',gev.length);for(const ev of gev){const r=row(s,ev.start?.date?'All day':hhmm(ev.start.dateTime)+(ev.end?.dateTime?'–'+hhmm(ev.end.dateTime):''),ev.summary||'(제목 없음)','google');r.style.setProperty('--gc',ev._cal?.color||'#6B6B67');const meta=[ev._cal?.summary,ev.location].filter(Boolean).join(' · ');if(meta){const sm=document.createElement('small');sm.textContent=meta;r.querySelector('.dd-text').append(sm);}if(ev.htmlLink&&new URL(ev.htmlLink).origin==='https://www.google.com'){const a=document.createElement('a');a.href=ev.htmlLink;a.target='_blank';a.rel='noopener';a.className='dd-link';a.textContent='Open ↗';r.append(a);}const tags=document.createElement('div');tags.className='tag-picks';const eventKey=(ev._cal?.id||ev._calendar||'')+'|'+ev.id;notebook.picker(tags,db.googleEventTags?.[eventKey]||[],value=>{(db.googleEventTags||={})[eventKey]=value;save();buildMonthGrid();});r.append(tags);const link=document.createElement('button');link.className='authbtn';link.textContent='이 일정만 연결';link.onclick=async()=>{try{await calendar.linkEvent(ev,ev._cal?.id||ev._calendar);dlg.close();}catch(e){notify(e.message);}};r.append(link);}}
+  if(gev.length){empty=false;const s=section('Google Calendar',gev.length);for(const ev of gev){const r=row(s,ev.start?.date?'All day':hhmm(ev.start.dateTime)+(ev.end?.dateTime?'–'+hhmm(ev.end.dateTime):''),ev.summary||'(제목 없음)','google');r.style.setProperty('--gc',ev._cal?.color||'#6B6B67');const meta=[ev._cal?.summary,ev.location].filter(Boolean).join(' · ');if(meta){const sm=document.createElement('small');sm.textContent=meta;r.querySelector('.dd-text').append(sm);}if(ev.htmlLink&&new URL(ev.htmlLink).origin==='https://www.google.com'){const a=document.createElement('a');a.href=ev.htmlLink;a.target='_blank';a.rel='noopener';a.className='dd-link';a.textContent='Open ↗';r.append(a);}const tags=document.createElement('div');tags.className='tag-picks';const eventKey=(ev._cal?.id||ev._calendar||'')+'|'+ev.id;notebook.picker(tags,db.googleEventTags?.[eventKey]||[],value=>{(db.googleEventTags||={})[eventKey]=value;save();buildMonthGrid();});r.append(tags);const link=document.createElement('button');link.className='authbtn';link.textContent='시간표로 가져오기';link.onclick=async()=>{try{await calendar.linkEvent(ev,ev._cal?.id||ev._calendar);dlg.close();}catch(e){notify(e.message);}};r.append(link);}}
   const blocks=(db.sched[k]||[]).filter(b=>visibleByTags(db,b.tags)).slice().sort((a,b)=>a.s-b.s);
   if(blocks.length){empty=false;const s=section('Schedule',blocks.length);for(const bk of blocks)row(s,slotTime(bk.s)+'–'+slotTime(bk.e+1),(bk.gc?'G · ':'')+(bk.text||'(제목 없음)')+(scheduleKind(bk)==='plan'?'':' · actual'),scheduleKind(bk));}
   const items=db.days[k]||[];
@@ -765,20 +766,6 @@ function openDayDetail(y,m,d){
 }
 document.getElementById('dayDialogClose').onclick=()=>document.getElementById('dayDialog').close();
 document.getElementById('dayDialog').addEventListener('click',e=>{if(e.target.id==='dayDialog')e.target.close();});
-function renderGoogleEmbed(){
-  const host=document.getElementById('gcEmbed'); if(!host) return;
-  const email=auth.currentUser?.email, cal=db.googleCalendar?.calendar||email;
-  if(!cal){host.innerHTML='<p class="hint">Sign in to show your Google Calendar here.</p>';return;}
-  const y=viewMonth.y,m=viewMonth.m,from=y+pad2(m+1)+'01',last=new Date(y,m+1,0).getDate(),to=y+pad2(m+1)+pad2(last);
-  const params=new URLSearchParams({src:cal,ctz:Intl.DateTimeFormat().resolvedOptions().timeZone,mode:'MONTH',wkst:'2',showTitle:'0',showPrint:'0',showTabs:'0',showCalendars:'0',showTz:'0',dates:from+'/'+to});
-  const src='https://calendar.google.com/calendar/embed?'+params;
-  const frame=host.querySelector('iframe');
-  if(frame&&frame.dataset.src===src) return;
-  host.textContent='';
-  const f=document.createElement('iframe'); f.title='Google Calendar'; f.src=src; f.dataset.src=src; f.loading='lazy'; f.className='gc-embed'; host.append(f);
-  const a=document.createElement('a'); a.href='https://calendar.google.com/calendar/r/month/'+y+'/'+(m+1)+'/1'; a.target='_blank'; a.rel='noopener'; a.className='hint'; a.textContent='Open in Google Calendar ↗'; host.append(a);
-}
-document.getElementById('gcEmbedFold').ontoggle=()=>{ if(document.getElementById('gcEmbedFold').open) renderGoogleEmbed(); };
 document.getElementById('monToday').onclick=()=>{ viewMonth={y:Y,m:M}; viewHabit={y:Y,m:M}; renderMonthly(); buildHabit(); };
 function buildMiniCal(){
   const host=document.getElementById('miniCal'); if(!host) return;
@@ -1335,7 +1322,7 @@ const routineJournal=installRoutineJournal({auth,getDate:id=>{const v=id==='dail
 for(const id of ['dailySchedule','weeklySchedule','monthGrid']){const host=document.createElement('div');host.className='schedule-tag-filter';document.getElementById(id).before(host);}
 function renderTagFilters(){document.querySelectorAll('.schedule-tag-filter').forEach(host=>notebook.filterUI(host));}
 const previousBuildAll=buildAll;buildAll=function(){previousBuildAll();renderTagFilters();};
-window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==parent||event.data?.channel!=='personal-desk')return;if(event.data.type==='manage-tags')notebook.manage();});
+window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==parent||event.data?.channel!=='personal-desk')return;if(event.data.type==='manage-tags')notebook.manage();if(event.data.type==='calendar-settings')setTimeout(()=>calendar.open(),300);});
 let deskContext=null;let applyingDeskContext=false;
 function applyDeskContext(ctx){
  document.body.classList.toggle('desk-today',ctx.view==='today');

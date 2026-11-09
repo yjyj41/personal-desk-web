@@ -1,4 +1,4 @@
-import {SCOPES,copy,same,createCalendarAPI,reconcile,instant,parts,importable,fingerprint,exportEventId} from './google-calendar.mjs?v=20261109a';
+import {SCOPES,copy,same,createCalendarAPI,reconcile,instant,parts,importable,fingerprint,exportEventId} from './google-calendar.mjs?v=20261109b';
 
 const ZONES=['Europe/London','Asia/Seoul','Europe/Paris','America/New_York','UTC'];
 // Change the sync time zone. Blocks you made keep their clock time (and are re-sent);
@@ -18,16 +18,20 @@ export function moveZone(data,from,to){
 export function installCalendar({getData,mutate,persist,ready,getUid,authorize,render,range,onExtras=()=>{},onConnected=()=>{}}){
   let token=null,expires=0,owner=null,generation=0,timer,busy=false,problem=false,issues=[],extras=[],calendars=[],allCalendars=[];
   const host=document.getElementById('googleCalendarPanel');
-  host.innerHTML=`<details class="fold gc-sync"><summary>Google Calendar 연결</summary>
-    <p class="hint">Monthly에 일정을 보여 주는 데는 이 설정이 필요 없어요. 여기서는 시간표 블록을 Google 캘린더 한 곳과 주고받는 고급 기능만 다룹니다. 할 일·일기·사진은 보내지 않습니다.</p>
-    <div class="backup-actions" style="justify-content:flex-start"><button type="button" class="authbtn" id="gcConnect">Google 연결 / 재인증</button><button type="button" class="authbtn" id="gcSync">지금 동기화</button><button type="button" class="authbtn" id="gcDisconnect">이 기기 연결 해제</button></div>
-    <label class="schedule-field">연결할 캘린더<select id="gcCalendar"><option value="">연결 후 선택</option></select></label>
-    <label class="schedule-field">시간대 (Google로 보낼 때 기준)<select id="gcZone"></select></label>
-    <label class="hint"><input type="checkbox" id="gcDefault" disabled hidden> 새 일정은 Desk에만 저장합니다. 일정 편집에서 개별 연결하세요.</label>
-    <p class="hint" id="gcStatus" role="status" aria-live="polite">연결하지 않음 · 기존 기록은 그대로 유지됩니다.</p>
-    <p class="hint">앱이 열려 있을 때 약 1분마다 갱신합니다. 브라우저를 다시 열거나 인증이 만료되면 다시 연결하세요. 현재 보는 달/주의 일정과 연결된 기록을 동기화합니다. 종일·초대 일정·06시 이전·30분 단위가 아닌 일정은 아래 목록에서 원본을 확인합니다.</p>
-    <div id="gcIssues"></div><div id="gcExtras"></div>
-    <p class="hint"><a href="https://console.cloud.google.com/apis/library/calendar-json.googleapis.com?project=bullet-journal-b359c" target="_blank" rel="noopener">Calendar API 설정</a> · 연결 권한은 본인 Google 계정에서 직접 승인해 주세요.</p>
+  host.innerHTML=`<details class="fold gc-sync" id="gcSettings"><summary>Google Calendar 설정</summary>
+    <p class="hint" id="gcStatus" role="status" aria-live="polite">연결 안 됨 · 기록은 그대로 있어요.</p>
+    <ol class="gc-steps">
+      <li><b>보기</b> — 연결되면 이 달력에 Google 일정이 함께 보여요. 보기만 하고 바꾸지 않아요.</li>
+      <li><b>올리기</b> — 시간표 블록 편집에서 “Google에도 저장”을 켜면 그 블록만 아래 캘린더에 올라가요. 이후 어느 쪽에서 고쳐도 서로 맞춰져요.</li>
+      <li><b>가져오기</b> — 달력에서 날짜를 눌러 Google 일정의 “시간표로 가져오기”를 누르면 그 일정이 시간표 블록이 돼요.</li>
+    </ol>
+    <div class="backup-actions" style="justify-content:flex-start"><button type="button" class="authbtn" id="gcConnect">Google 연결</button><button type="button" class="authbtn" id="gcSync">지금 맞추기</button><button type="button" class="authbtn" id="gcDisconnect">연결 끊기</button></div>
+    <label class="schedule-field">올릴 캘린더<select id="gcCalendar"><option value="">연결 후 선택</option></select></label>
+    <label class="schedule-field">시간대<select id="gcZone"></select></label>
+    <input type="checkbox" id="gcDefault" disabled hidden>
+    <p class="hint">연결은 이 탭에서 약 50분 유지돼요. 끊기면 “Google 연결”을 다시 누르세요. 할 일·일기·사진은 Google로 보내지 않아요.</p>
+    <div id="gcIssues"></div>
+    <details class="fold gc-extras-fold"><summary>아직 시간표에 없는 Google 일정</summary><p class="hint">종일·초대·06시 이전·30분 단위가 아닌 일정은 가져올 수 없어 Google에서만 관리해요.</p><div id="gcExtras"></div></details>
   </details>`;
   const el=id=>document.getElementById(id),status=text=>el('gcStatus').textContent=text;
   const config=()=>getData().googleCalendar||{};
@@ -60,13 +64,14 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
     for(const event of [...new Map(extras.map(e=>[e.id,e])).values()]){
       const row=document.createElement('p');row.className='hint';
       row.textContent=(event.summary||'(제목 없음)')+' · '+(event.start?.date||event.start?.dateTime||'')+' (Google 원본) ';
-      if(event.htmlLink&&new URL(event.htmlLink).origin==='https://www.google.com'){const a=document.createElement('a');a.href=event.htmlLink;a.target='_blank';a.rel='noopener';a.textContent='열기';row.append(a);}if(importable(event,config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone)){const link=document.createElement('button');link.className='authbtn';link.textContent='이 일정만 연결';link.onclick=()=>linkEvent(event,event._calendar||config().calendar).catch(e=>status(e.message));row.append(link);}el('gcExtras').append(row);
+      if(event.htmlLink&&new URL(event.htmlLink).origin==='https://www.google.com'){const a=document.createElement('a');a.href=event.htmlLink;a.target='_blank';a.rel='noopener';a.textContent='열기';row.append(a);}if(importable(event,config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone)){const link=document.createElement('button');link.className='authbtn';link.textContent='시간표로 가져오기';link.onclick=()=>linkEvent(event,event._calendar||config().calendar).catch(e=>status(e.message));row.append(link);}el('gcExtras').append(row);
     }
   }
   async function run(){
     clearTimeout(timer);if(busy||problem||!ready())return;
-    if(!connected()){status('Google 연결 / 재인증이 필요해요. 변경은 Firebase에 보관됩니다.');return;}
-    if(!config().calendar&&!Object.values(getData().sched||{}).flat().some(b=>b.google&&(b.gc?.calendar||b.googleCalendar))){status('Google 보기 연결됨 · 동기화할 일정은 일정 편집에서 개별 선택하세요.');return;}
+    if(token&&Date.now()>=expires){token=null;expires=0;onConnected(false);status('연결 시간이 지났어요 · “Google 연결”을 다시 누르세요. 기록은 그대로예요.');return;}
+    if(!connected()){if(!token)status('연결 안 됨 · “Google 연결”을 누르세요. 기록은 그대로예요.');return;}
+    if(!config().calendar&&!Object.values(getData().sched||{}).flat().some(b=>b.google&&(b.gc?.calendar||b.googleCalendar))){status('연결됨 · 달력에 Google 일정이 보여요. 블록을 올리려면 “올릴 캘린더”를 고르세요.');return;}
     if(document.getElementById('scheduleDialog').open)return;
     setBusy(true);status('Google 동기화 중…');const epoch=generation,uid=getUid(),c=copy(config());
     try{
@@ -80,20 +85,32 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
     }catch(error){if(epoch===generation){problem=true;status(error.message);if(error.status===401){token=null;expires=0;}}}
     finally{if(epoch===generation)setBusy(false);}
   }
-  el('gcConnect').onclick=async()=>{
-    if(!ready()){status('불렛저널 기록을 먼저 불러와야 합니다. 상단 저장 상태나 기록 충돌을 확인해 주세요.');return;}problem=false;setBusy(true);status('Google 권한 확인 중…');const epoch=generation;
-    try{const result=await authorize(SCOPES);if(epoch!==generation)return;token=result;expires=Date.now()+50*60*1000;owner=getUid();
+  // getToken asks Google (popup) or hands over a token already granted at sign-in.
+  async function connectWith(getToken){
+    problem=false;setBusy(true);status('Google 권한 확인 중…');const epoch=generation;
+    try{const result=await getToken();if(epoch!==generation||!result)return;token=result;expires=Date.now()+50*60*1000;owner=getUid();
       allCalendars=await api.calendars();calendars=allCalendars.filter(c=>['owner','writer'].includes(c.accessRole));onConnected(true);
       if(epoch!==generation)return;
-      el('gcCalendar').textContent='';const blank=document.createElement('option');blank.value='';blank.textContent='캘린더를 선택하세요';el('gcCalendar').append(blank);
+      el('gcCalendar').textContent='';const blank=document.createElement('option');blank.value='';blank.textContent='고르지 않음 (보기만)';el('gcCalendar').append(blank);
       for(const c of calendars){const option=document.createElement('option');option.value=c.id;option.textContent=c.summary+(c.primary?' (기본)':'');el('gcCalendar').append(option);}
-      draw();if(!calendars.length){problem=true;status('연결은 됐지만 수정 가능한 캘린더가 없어요. 승인한 권한과 Google 계정을 확인해 주세요.');return;}status('Google 연결됨 · 캘린더를 선택하세요.');
-    }catch(e){if(epoch===generation){problem=true;token=null;expires=0;status('Google Calendar 연결 실패: '+e.message);}}
+      draw();status('연결됨 · 달력에 Google 일정이 보여요.');
+    }catch(e){if(epoch===generation){problem=true;token=null;expires=0;onConnected(false);status('Google Calendar 연결 실패: '+e.message);}}
     finally{if(epoch===generation)setBusy(false);}if(epoch===generation&&!problem)await run();
+  }
+  el('gcConnect').onclick=()=>{
+    if(!ready()){status('저널 기록을 먼저 불러와야 해요. 잠시 후 다시 눌러 주세요.');return;}
+    return connectWith(()=>authorize(SCOPES));
   };
+  // Called right after Google sign-in: the sign-in already granted calendar access.
+  async function adopt(granted){
+    if(!granted)return;const epoch=generation;
+    for(let i=0;i<60&&!ready();i++)await new Promise(r=>setTimeout(r,250));
+    if(epoch!==generation||!ready()||connected())return;
+    await connectWith(async()=>granted);
+  }
   el('gcCalendar').onchange=async()=>{
     const calendar=el('gcCalendar').value;if(!calendar)return;
-    if(!confirm('새로 연결할 일정의 기본 대상 캘린더로 설정할까요? 일정을 자동으로 가져오거나 보내지 않습니다.')){draw();return;}
+    if(!confirm('“Google에도 저장”을 켠 블록을 이 캘린더에 올릴까요? 다른 일정은 자동으로 보내거나 가져오지 않아요.')){draw();return;}
     mutate(data=>{data.googleCalendar={...config(),calendar,zone:config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone,defaultSend:false};});draw();await run();
   };
   el('gcZone').onchange=async()=>{
@@ -106,8 +123,8 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
   };
   el('gcDefault').onchange=()=>{mutate(data=>{data.googleCalendar={...config(),defaultSend:el('gcDefault').checked};});};
   el('gcSync').onclick=()=>{problem=false;return run();};
-  function reset(){generation++;token=null;expires=0;owner=null;clearTimeout(timer);busy=false;problem=false;issues=[];extras=[];onExtras([]);onConnected(false);calendars=[];allCalendars=[];el('gcCalendar').innerHTML='<option value="">연결 후 선택</option>';setBusy(false);status('이 기기 연결 해제됨 · 기록과 Google 일정은 유지됩니다.');draw();}
-  el('gcDisconnect').onclick=reset;
+  function reset(){generation++;token=null;expires=0;owner=null;clearTimeout(timer);busy=false;problem=false;issues=[];extras=[];onExtras([]);onConnected(false);calendars=[];allCalendars=[];el('gcCalendar').innerHTML='<option value="">연결 후 선택</option>';setBusy(false);status('연결 안 됨 · “Google 연결”을 누르세요. 기록은 그대로예요.');draw();}
+  el('gcDisconnect').onclick=()=>{reset();status('연결 끊음 · 기록과 Google 일정은 그대로예요.');};
   const interval=setInterval(()=>{if(document.visibilityState==='visible')run();},60000);
   window.addEventListener('pagehide',()=>clearInterval(interval),{once:true});
   document.addEventListener('visibilitychange',()=>{if(document.visibilityState==='visible')run();});
@@ -157,6 +174,7 @@ export function installCalendar({getData,mutate,persist,ready,getUid,authorize,r
     if(failed.length===results.length&&failed.length)throw failed[0].reason;
     return results.flatMap(r=>r.status==='fulfilled'?r.value:[]);
   }
-  return {reset,draw,run,beforeSave,deleteRemote,linkEvent,writableCalendars:()=>calendars,monthEvents,connected:()=>!!connected(),zone:()=>config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone,calendarList:()=>allCalendars.filter(c=>c.selected!==false&&c.accessRole!=='freeBusyReader').map(c=>({id:c.id,summary:c.summaryOverride||c.summary,color:c.backgroundColor||'#6B6B67',primary:!!c.primary})),connect:()=>el('gcConnect').click(),isBusy:()=>busy,defaultSend:()=>false,
+  function open(){const d=el('gcSettings');d.open=true;d.scrollIntoView({behavior:'smooth',block:'start'});}
+  return {reset,draw,run,adopt,open,beforeSave,deleteRemote,linkEvent,writableCalendars:()=>calendars,monthEvents,connected:()=>!!connected(),zone:()=>config().zone||Intl.DateTimeFormat().resolvedOptions().timeZone,calendarList:()=>allCalendars.filter(c=>c.selected!==false&&c.accessRole!=='freeBusyReader').map(c=>({id:c.id,summary:c.summaryOverride||c.summary,color:c.backgroundColor||'#6B6B67',primary:!!c.primary})),connect:()=>el('gcConnect').click(),isBusy:()=>busy,defaultSend:()=>false,
     changed(){draw();clearTimeout(timer);if(connected())timer=setTimeout(run,2000);}};
 }
