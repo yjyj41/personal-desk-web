@@ -249,10 +249,10 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261109c">
-<link rel="stylesheet" href="./redesign.css?v=20261109c">
+<link rel="stylesheet" href="./desk.css?v=20261109d">
+<link rel="stylesheet" href="./redesign.css?v=20261109d">
 <link rel="stylesheet" href="./notebook.css?v=20261104">
-<link rel="stylesheet" href="./grid.css?v=20261109c">
+<link rel="stylesheet" href="./grid.css?v=20261109d">
 </head>
 <body>
 <div class="book">
@@ -377,7 +377,7 @@ Synced to your account ·
 <dialog id="conflictDialog"><h2>두 기기에서 같은 기록을 수정했어요</h2><p>겹치지 않는 변경은 모두 유지됩니다. 아래 겹치는 부분에 사용할 기록을 선택해 주세요. 선택 전에 현재 기록을 백업할 수 있어요.</p><div id="conflictDetails" class="conflict-list"></div><div class="dialog-actions"><button class="authbtn" id="backupConflict">Back up this version</button><button class="authbtn" id="chooseRemote">Use cloud version</button><button class="authbtn" id="chooseLocal">Use this version</button><button class="authbtn" id="closeConflict">Later</button></div></dialog>
 <dialog id="scheduleDialog"><form id="scheduleForm">
 <h2 id="scheduleDialogTitle">Schedule</h2><p id="scheduleDialogDate"></p>
-<label class="schedule-field">구분<select id="scheduleKind"><option value="plan">Plan</option><option value="actual">Actual</option></select></label>
+<label class="schedule-field">구분<select id="scheduleKind"><option value="plan">Plan (계획)</option><option value="actual">Done (한 일)</option></select></label>
 <label class="hint"><input type="checkbox" id="scheduleGoogle"> Google에도 저장</label><p class="hint">켜면 이 블록만 Google 캘린더에 올라가고 양쪽 수정이 맞춰져요. 꺼도 양쪽 일정은 남아요.</p>
 <label class="schedule-field">Details<textarea id="scheduleText" rows="3" placeholder="What are you planning? What happened?"></textarea></label>
 <div class="schedule-times"><label class="schedule-field">Start<select id="scheduleStart"></select></label><label class="schedule-field">End<select id="scheduleEnd"></select></label></div>
@@ -392,19 +392,19 @@ Synced to your account ·
 import {installNotebook} from './notebook-ui.mjs';
 import {allNotes,visibleByTags} from './notebook.mjs';
 import {installRoutineJournal} from '../../shared/routine-journal.mjs';
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261109c';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261109d';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261109c';
-import {createJournalSync} from './journal-sync.mjs?v=20261109c';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261109c';
-import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261109c';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261109c';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261109c';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261109d';
+import {createJournalSync} from './journal-sync.mjs?v=20261109d';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261109d';
+import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261109d';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261109d';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261109d';
 import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
-import {installFrame} from '../../shared/frame.mjs?v=20261109c';
+import {installFrame} from '../../shared/frame.mjs?v=20261109d';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1139,6 +1139,21 @@ function scheduleOptions(dates,compact=false){return {dates,compact,keyOf:keyOfD
     const current=(db.sched[key] || []).find(item=>item.id===block.id);
     if(JSON.stringify(current)!==JSON.stringify(before)){notify('다른 곳에서 수정된 기록이에요. 다시 선택해 주세요.');refreshSchedules();return;}
     changeWithUndo('시간을 옮겼어요.',()=>saveSchedule(db,key,block));
+  },
+  onDone:(key,before)=>{
+    if(calendar.isBusy()){notify("Google 동기화 중이에요. 잠시 후 다시 눌러 주세요.");return;}
+    const current=(db.sched[key] || []).find(item=>item.id===before.id);
+    if(JSON.stringify(current)!==JSON.stringify(before)){notify('다른 곳에서 수정된 기록이에요. 다시 선택해 주세요.');refreshSchedules();return;}
+    changeWithUndo('한 일로 바꿨어요.',()=>saveSchedule(db,key,{...current,kind:'actual'}));
+  },
+  // One tap on “G”: send this block to Google (or stop syncing it). Same rules as the editor checkbox.
+  onGoogle:async(key,before)=>{
+    const current=(db.sched[key] || []).find(item=>item.id===before.id);
+    if(JSON.stringify(current)!==JSON.stringify(before)){notify('다른 곳에서 수정된 기록이에요. 다시 선택해 주세요.');refreshSchedules();return;}
+    const updated={...current,google:!current.google};
+    if(updated.google&&!calendar.connected()){notify('먼저 Google Calendar를 연결해 주세요. Monthly 위쪽 버튼이나 Settings에서 연결할 수 있어요.');return;}
+    try{if(!await calendar.beforeSave(key,current,updated))return;}catch(e){notify(e.message==='먼저 Google 연결 후 캘린더를 선택해 주세요.'?'Google에 올릴 캘린더를 먼저 골라 주세요. 캘린더 설정이 열려요.':e.message);if(/캘린더를 선택/.test(e.message))calendar.open();return;}
+    changeWithUndo(updated.google?'Google에도 저장해요.':'Google 연동을 껐어요. 양쪽 일정은 남아요.',()=>saveSchedule(db,key,updated));
   }};}
 function renderSched(){if(viewDaily)renderSchedule(document.getElementById('dailySchedule'),scheduleOptions([new Date(viewDaily.y,viewDaily.m,viewDaily.d)]));}
 function renderWeekly(){

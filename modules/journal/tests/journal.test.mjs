@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {clone,emptyJournal,mergeJournal,resolveJournal,validateJournal,moveTask,previousOpenTasks,journalEntryDates} from '../journal-core.mjs';
 import {createJournalSync} from '../journal-sync.mjs';
-import {weekDates,scheduleKind,scheduleItems,saveSchedule,slotTime,randomScheduleColor} from '../schedule.mjs';
+import {weekDates,scheduleKind,scheduleItems,saveSchedule,slotTime,randomScheduleColor,blockSide} from '../schedule.mjs';
 import {parseTimelineExport,routePointCount,routeSummary,routeTrack,validateRoutes} from '../timeline.mjs';
 
 test('Google Timeline arrays become compact daily routes',()=>{
@@ -53,6 +53,17 @@ test('daily and weekly share edits, lane changes, deletion and backup records',(
   assert.equal(scheduleItems(data,key,'plan').length,0);assert.equal(scheduleItems(data,key,'actual')[0].text,'실제');
   const restored=validateJournal(JSON.parse(JSON.stringify(data)));assert.equal(scheduleItems(restored,key,'actual')[0].e,4);
   data.sched[key]=data.sched[key].filter(b=>b.id!=='one');assert.equal(scheduleItems(data,key,'actual').length,0);
+});
+test('week view lists plans and done in one lane, splitting only overlaps; done keeps the time',()=>{
+  const data=emptyJournal(),key='2026-11-02';
+  saveSchedule(data,key,{id:'swim',kind:'plan',s:27,e:28,text:'수영',color:1});
+  saveSchedule(data,key,{id:'dinner',kind:'actual',s:25,e:31,text:'FIERY FLAVORS',color:4});
+  saveSchedule(data,key,{id:'work',kind:'actual',s:9,e:22,text:'ECT',color:2});
+  const all=scheduleItems(data,key,'all');assert.deepEqual(all.map(b=>b.id),['work','dinner','swim']);
+  assert.equal(blockSide(all,all.find(b=>b.id==='work')),'full');
+  assert.equal(blockSide(all,all.find(b=>b.id==='swim')),'plan');assert.equal(blockSide(all,all.find(b=>b.id==='dinner')),'actual');
+  const swim=all.find(b=>b.id==='swim');saveSchedule(data,key,{...swim,kind:'actual'});
+  const done=scheduleItems(data,key,'actual').find(b=>b.id==='swim');assert.equal(done.s,27);assert.equal(done.e,28);assert.equal(scheduleItems(data,key,'plan').length,0);
 });
 test('schedule range rejects reversed times and supports midnight endpoint',()=>{
   const data=emptyJournal(),block={id:'end',kind:'actual',s:35,e:35,text:'마무리',color:0};

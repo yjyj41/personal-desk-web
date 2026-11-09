@@ -122,18 +122,40 @@ html body .schedule-block.color-1{--c:#3F7D5A;--t:#DCEDE2;--x:#2A5A3F}
 html body .schedule-block.color-2{--c:#2B57D9;--t:#E4E9FB;--x:#1F3E9C}
 html body .schedule-block.color-3{--c:#B4733C;--t:#F5E7D4;--x:#7E4E24}
 html body .schedule-block.color-4{--c:#7A4FB0;--t:#ECE2F6;--x:#56357F}
-html body .schedule-lane.plan .schedule-block,html body .schedule-lane.plan .schedule-block[class*=color-]{background:var(--t)!important;border:0!important;border-left:3px solid var(--c)!important}
-html body .schedule-lane.actual .schedule-block,html body .schedule-lane.actual .schedule-block[class*=color-]{background:var(--t)!important;border:1.5px solid var(--c)!important}
-html body .schedule-lane .schedule-block .schedule-block-edit,html body .schedule-lane .schedule-block[class*=color-] .schedule-block-edit{color:var(--x)!important}
-html body .schedule-block-edit{padding:4px 16px 4px 6px!important;font:11px/1.3 var(--sans)!important}
-html body .schedule-block-edit small,html body .schedule-lane .schedule-block small{order:2;font:9px var(--mono)!important;color:inherit!important;opacity:.7}
+/* Plan = light tint with a colour bar; done (actual) = dark fill, white text. */
+html body .schedule-lane .schedule-block.kind-plan{background:var(--t)!important;border:0!important;border-left:3px solid var(--c)!important;border-radius:3px!important}
+html body .schedule-lane .schedule-block.kind-actual{background:var(--x)!important;border:0!important;border-left:3px solid var(--x)!important;border-radius:3px!important}
+html body .schedule-lane .schedule-block.kind-plan .schedule-block-edit{color:var(--x)!important}
+html body .schedule-lane .schedule-block.kind-actual .schedule-block-edit{color:#fff!important}
+html body .schedule-block-edit{padding:4px 16px 4px 6px!important;font:500 11.5px/1.3 var(--sans)!important;gap:2px}
+html body .schedule-block-edit small,html body .schedule-lane .schedule-block small{order:0;font:500 9.5px/1.2 var(--mono)!important;color:inherit!important;opacity:.85}
 html body .schedule-block-edit{display:flex!important;flex-direction:column}
 html body .schedule-grip.move{color:var(--faint)!important}
+html body .schedule-block.kind-actual .schedule-grip.move{color:rgba(255,255,255,.7)!important}
+/* A plan and a done block at the same time share the column. */
+html body .schedule-block.side-plan{left:2px!important;right:calc(50% + 1px)!important}
+html body .schedule-block.side-actual{left:calc(50% + 1px)!important;right:2px!important}
+/* “✓ 했어요”: turns a plan into done. Shown on hover/focus, always on touch screens. */
+html body .schedule-done{position:absolute;right:2px;bottom:2px;width:22px;height:22px;padding:0;border:1px solid var(--c)!important;border-radius:2px;background:#fff;color:var(--x);font:600 12px/1 var(--mono);cursor:pointer;opacity:0;z-index:2}
+html body .schedule-block:hover .schedule-done,html body .schedule-block:focus-within .schedule-done{opacity:1}
+html body .schedule-done:hover{background:var(--x);color:#fff}
+/* “G”: sync this block with Google. Outline = off (on hover), filled = on (always shown). */
+html body .schedule-google{position:absolute;right:26px;bottom:2px;width:22px;height:22px;padding:0;border:1px solid var(--c)!important;border-radius:2px;background:#fff;color:var(--x);font:600 11px/1 var(--mono);cursor:pointer;opacity:0;z-index:2}
+html body .schedule-google.solo{right:2px}
+html body .schedule-google.on{opacity:1;background:var(--c);color:#fff;border-color:#fff!important}
+html body .schedule-block:hover .schedule-google,html body .schedule-block:focus-within .schedule-google{opacity:1}
+html body .schedule-done:hover{background:var(--x);color:#fff}
+@media (hover:none){html body .schedule-done,html body .schedule-google{opacity:1}}
+/* Blocks shorter than the buttons: keep the buttons on the right, beside the text. */
+html body .schedule-block{min-height:24px}
 html body .schedule-selection{background:rgba(43,87,217,.1)!important;border:1px dashed var(--accent)!important}
 
 /* Weekly grid */
 html body .weekly-grid .schedule-day-head,html body .weekly-grid .schedule-day{border-left:1px solid var(--line)!important}
-html body .weekly-grid .schedule-day{gap:0 4px;padding:0 3px}
+html body .weekly-grid .schedule-day{grid-template-columns:minmax(0,1fr);gap:0;padding:0 3px}
+html body .weekly-grid{grid-template-columns:44px repeat(7,minmax(104px,1fr))!important;min-width:780px!important}
+html body .weekly-grid .schedule-lane.all{background-image:repeating-linear-gradient(to bottom,var(--rule) 0,var(--rule) 1px,transparent 1px,transparent 52px)!important;background-color:rgba(255,255,255,.5)!important}
+html body .weekly-grid .schedule-day:nth-last-child(-n+2) .schedule-lane.all{background-color:rgba(244,236,226,.55)!important}
 html body .weekly-grid .schedule-date{height:30px;font:600 11px var(--mono);letter-spacing:.04em;text-align:left;padding:0 6px;color:var(--ink)}
 html body .weekly-grid .schedule-day-head.is-today .schedule-date{color:var(--accent)}
 html body .weekly-grid .schedule-day-head.is-today{box-shadow:inset 0 2px var(--accent)!important}

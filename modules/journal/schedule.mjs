@@ -12,7 +12,13 @@ export function weekDates(date) {
   return Array.from({length:7},(_,i)=>new Date(monday.getFullYear(),monday.getMonth(),monday.getDate()+i));
 }
 export function scheduleItems(data,key,kind) {
-  return (data.sched[key] || []).filter(block=>scheduleKind(block)===kind&&visibleByTags(data,block.tags)).sort((a,b)=>a.s-b.s);
+  return (data.sched[key] || []).filter(block=>(kind==='all'||scheduleKind(block)===kind)&&visibleByTags(data,block.tags)).sort((a,b)=>a.s-b.s);
+}
+// In the one-lane week view, a plan and an actual at the same time share the width:
+// plan on the left half, actual on the right. Everything else uses the full width.
+export function blockSide(list,block) {
+  const kind=scheduleKind(block);
+  return list.some(other=>other!==block&&scheduleKind(other)!==kind&&other.s<=block.e&&block.s<=other.e)?kind:'full';
 }
 export function slotTime(slot) {
   const minutes=360+slot*30;
@@ -25,7 +31,7 @@ export function saveSchedule(data,key,block) {
 }
 
 // Both surfaces read the same dated records; the renderer never owns a second copy.
-export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,compact=false,onDay}) {
+export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,onGoogle,compact=false,onDay}) {
   host.textContent='';
   const grid=document.createElement('div');grid.className='schedule-grid'+(compact?' weekly-grid':'');
   grid.style.setProperty('--day-count',String(dates.length));
@@ -37,7 +43,7 @@ export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,compact=f
     title.textContent=compact?['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()]+' '+String(date.getDate()).padStart(2,'0'):'Schedule';
     if(compact){title.type='button';title.setAttribute('aria-label',keyOf(date)+' 오늘 탭에서 열기');title.onclick=()=>onDay(date);}
     const labels=document.createElement('div');labels.className='schedule-labels';
-    for(const kind of ['plan','actual']){const button=document.createElement('button');button.type='button';button.textContent=(kind==='plan'?'Plan':'Actual')+' +';button.setAttribute('aria-label',(kind==='plan'?'계획':'실제')+' 추가');button.onclick=()=>onEdit(keyOf(date),{kind,s:0,e:1,text:'',color:kind==='plan'?2:randomScheduleColor()});labels.append(button);}
+    for(const kind of ['plan','actual']){const button=document.createElement('button');button.type='button';button.textContent=(kind==='plan'?'Plan':'Done')+' +';button.setAttribute('aria-label',(kind==='plan'?'계획':'한 일')+' 추가');button.onclick=()=>onEdit(keyOf(date),{kind,s:0,e:1,text:'',color:kind==='plan'?2:randomScheduleColor()});labels.append(button);}
     head.append(title,labels);grid.append(head);
   }
   const ruler=document.createElement('div');ruler.className='schedule-ruler';
@@ -45,9 +51,11 @@ export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,compact=f
   grid.append(ruler);
   for(const date of dates){
     const day=document.createElement('div');day.className='schedule-day';
-    for(const kind of ['plan','actual']){
-      const key=keyOf(date),lane=document.createElement('div');lane.className='schedule-lane '+kind;
-      lane.setAttribute('aria-label',key+' '+(kind==='plan'?'계획':'실제'));lane.dataset.day=key;lane.dataset.kind=kind;
+    // Week view: one lane per day, plans light and actuals dark. Day view keeps two lanes.
+    for(const laneKind of compact?['all']:['plan','actual']){
+      const kind=laneKind==='all'?'plan':laneKind;
+      const key=keyOf(date),lane=document.createElement('div');lane.className='schedule-lane '+laneKind;
+      lane.setAttribute('aria-label',key+' '+(laneKind==='all'?'일정':kind==='plan'?'계획':'실제'));lane.dataset.day=key;lane.dataset.kind=laneKind;
       let selection=null;
       const slotAt=e=>Math.max(0,Math.min(SLOT_COUNT-1,Math.floor((e.clientY-lane.getBoundingClientRect().top)/SLOT_HEIGHT)));
       lane.addEventListener('pointerdown',event=>{
@@ -67,16 +75,23 @@ export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,compact=f
         onEdit(key,{kind,s:Math.min(start,end),e:start===end?Math.min(start+1,SLOT_COUNT-1):Math.max(start,end),text:'',color:kind==='plan'?2:randomScheduleColor()});
       });
       lane.addEventListener('pointercancel',()=>{selection?.marker.remove();selection=null;});
-      for(const block of scheduleItems(getData(),key,kind)){
-        const card=document.createElement('div');card.className='schedule-block color-'+((block.color || 0)%5);
+      const blocks=scheduleItems(getData(),key,laneKind);
+      for(const block of blocks){
+        const kind=scheduleKind(block);
+        const card=document.createElement('div');card.className='schedule-block color-'+((block.color || 0)%5)+' kind-'+kind;
+        if(laneKind==='all')card.classList.add('side-'+blockSide(blocks,block));
         card.style.top=block.s*SLOT_HEIGHT+'px';card.style.height=(block.e-block.s+1)*SLOT_HEIGHT-2+'px';
         const edit=document.createElement('button');edit.type='button';edit.className='schedule-block-edit';
         edit.title=slotTime(block.s)+'–'+slotTime(block.e+1)+' '+block.text;
-        edit.setAttribute('aria-label',key+' '+(kind==='plan'?'계획':'실제')+' '+edit.title+' 편집');
-        if(!compact && block.e>block.s){const time=document.createElement('small');time.textContent=slotTime(block.s)+'–'+slotTime(block.e+1);edit.append(time);}
-        const text=document.createElement('span');text.textContent=(block.google?'G · ':'')+(block.text || '내용 입력');edit.append(text);
+        edit.setAttribute('aria-label',key+' '+(kind==='plan'?'계획':'한 일')+' '+edit.title+' 편집');
+        if(block.e>block.s){const time=document.createElement('small');time.textContent=slotTime(block.s)+'–'+slotTime(block.e+1);edit.append(time);}
+        const text=document.createElement('span');text.textContent=((block.google&&!onGoogle)?'G · ':'')+(block.text || '내용 입력');edit.append(text);
         edit.onclick=()=>onEdit(key,{...block,kind});
         card.append(edit);
+        // One tap turns a plan into what you did, at the same time.
+        if(kind==='plan'&&onDone){const done=document.createElement('button');done.type='button';done.className='schedule-done';done.textContent='✓';done.title='했어요 — 한 일로 바꾸기';done.setAttribute('aria-label',(block.text||'계획')+' 했어요, 한 일로 바꾸기');done.onclick=event=>{event.stopPropagation();onDone(key,{...block});};card.append(done);}
+        // “G”: this block alone syncs with Google Calendar. Filled when on.
+        if(onGoogle){const g=document.createElement('button');g.type='button';g.className='schedule-google'+(block.google?' on':'')+(kind==='plan'&&onDone?'':' solo');g.textContent='G';g.setAttribute('aria-pressed',String(!!block.google));g.title=block.google?'Google 연동 중 — 누르면 끄기':'Google에도 저장';g.setAttribute('aria-label',(block.text||'일정')+' '+g.title);g.onclick=event=>{event.stopPropagation();onGoogle(key,{...block});};card.append(g);}
         for(const mode of ['move','top','bottom']){
           const grip=document.createElement('div');grip.className='schedule-grip '+mode;grip.textContent=mode==='move'?'⠿':'';grip.title=mode==='move'?'시간 이동':'길이 조절';
           grip.addEventListener('pointerdown',event=>{
