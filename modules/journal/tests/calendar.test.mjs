@@ -70,9 +70,11 @@ test('remote deletion retains local record privately and advances id generation'
 test('foreign calendar links are not pushed to newly selected calendar',async()=>{
   const {b}=linked();b.gc.calendar='other';const r=rig(b);await r.run();assert.equal(r.writes.length,0);
 });
-test('Google imported events include recurring instances with distinct IDs',async()=>{
+// Since the selective-sync change, unlinked Google events stay read-only extras and are never copied in.
+test('recurring Google instances are listed separately and never imported',async()=>{
   const r=rig({...block(),google:false});r.remote.set('first',{...ev(),id:'first',recurringEventId:'series'});r.remote.set('second',{...ev(),id:'second',recurringEventId:'series'});
-  await r.run();await r.run();assert.equal(r.data.sched[key].length,3);assert.equal(new Set(r.data.sched[key].map(b=>b.id)).size,3);
+  await r.run();const result=await r.run();assert.equal(r.data.sched[key].length,1);assert.equal(r.writes.length,0);
+  assert.deepEqual(result.extras.map(e=>e.id).filter(id=>id!=='remote').sort(),['first','second']);
 });
 test('account change during GET prevents local mutation and all writes',async()=>{
   const {b,e}=linked(),r=rig(b,e);let valid=true;r.args.valid=()=>valid;
