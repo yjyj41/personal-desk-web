@@ -31,7 +31,25 @@ export function saveSchedule(data,key,block) {
 }
 
 // Both surfaces read the same dated records; the renderer never owns a second copy.
-export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,onGoogle,compact=false,onDay}) {
+// Colour from what the block says. First matching group wins; null = no guess, keep the colour.
+// Colours: 0 Red, 1 Green, 2 Blue, 3 Ochre, 4 Purple.
+export const COLOR_RULES=[
+  {color:4,name:'문화·여가',words:['공연','콘서트','concert','전시','exhibition','museum','미술관','박물관','gallery','영화','movie','cinema','뮤지컬','musical','theatre','theater','연극','오페라','opera','ballet','발레','barbican','piano','symphony','orchestra','sinfonia','recital','festival','페스티벌','독서','book','photo','사진','여행','trip','travel','티켓','ticket','flight','비행']},
+  {color:1,name:'운동',words:['운동','수영','swim','swimming','러닝','running','run','달리기','gym','헬스','요가','yoga','pilates','필라테스','산책','walk','등산','hike','hiking','krc','tennis','테니스','축구','football','climbing','클라이밍','bike','자전거','workout','스트레칭']},
+  {color:3,name:'식사',words:['점심','저녁','아침','lunch','dinner','breakfast','brunch','브런치','요리','cook','cooking','식사','meal','coffee','커피','카페','cafe','음식','food','restaurant','레스토랑','도시락','맛집','장보기','grocery']},
+  {color:2,name:'일',words:['업무','work','회의','meeting','출근','퇴근','ect','project','프로젝트','report','보고서','deadline','마감','email','이메일','cad','설계','공부','study']},
+  {color:0,name:'약속·사람',words:['약속','친구','만남','date','데이트','party','파티','생일','birthday','모임','가족','family','통화']}
+];
+const escapeRule=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+export function autoColor(text){
+  const t=String(text||'').toLowerCase();
+  // Latin words match whole words (so “ect” is not found in “connect”); Korean matches anywhere.
+  const hit=w=>/^[a-z0-9 ]+$/.test(w)?new RegExp('(^|[^a-z0-9])'+escapeRule(w)+'($|[^a-z0-9])').test(t):t.includes(w);
+  for(const rule of COLOR_RULES)if(rule.words.some(hit))return rule.color;
+  return null;
+}
+
+export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,onDelete,onGoogle,compact=false,onDay}) {
   host.textContent='';
   const grid=document.createElement('div');grid.className='schedule-grid'+(compact?' weekly-grid':'');
   grid.style.setProperty('--day-count',String(dates.length));
@@ -90,6 +108,7 @@ export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,on
         card.append(edit);
         // One tap turns a plan into what you did, at the same time.
         if(kind==='plan'&&onDone){const done=document.createElement('button');done.type='button';done.className='schedule-done';done.textContent='✓';done.title='했어요 — 한 일로 바꾸기';done.setAttribute('aria-label',(block.text||'계획')+' 했어요, 한 일로 바꾸기');done.onclick=event=>{event.stopPropagation();onDone(key,{...block});};card.append(done);}
+        if(kind==='plan'&&onDelete){const del=document.createElement('button');del.type='button';del.className='schedule-del';del.textContent='×';del.title='계획 지우기';del.setAttribute('aria-label',(block.text||'계획')+' 지우기');del.onclick=event=>{event.stopPropagation();onDelete(key,{...block});};card.append(del);}
         // “G”: this block alone syncs with Google Calendar. Filled when on.
         if(onGoogle){const g=document.createElement('button');g.type='button';g.className='schedule-google'+(block.google?' on':'')+(kind==='plan'&&onDone?'':' solo');g.textContent='G';g.setAttribute('aria-pressed',String(!!block.google));g.title=block.google?'Google 연동 중 — 누르면 끄기':'Google에도 저장';g.setAttribute('aria-label',(block.text||'일정')+' '+g.title);g.onclick=event=>{event.stopPropagation();onGoogle(key,{...block});};card.append(g);}
         for(const mode of ['move','top','bottom']){

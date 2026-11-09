@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {clone,emptyJournal,mergeJournal,resolveJournal,validateJournal,moveTask,previousOpenTasks,journalEntryDates} from '../journal-core.mjs';
 import {createJournalSync} from '../journal-sync.mjs';
-import {weekDates,scheduleKind,scheduleItems,saveSchedule,slotTime,randomScheduleColor,blockSide} from '../schedule.mjs';
+import {weekDates,scheduleKind,scheduleItems,saveSchedule,slotTime,randomScheduleColor,blockSide,autoColor} from '../schedule.mjs';
 import {parseTimelineExport,routePointCount,routeSummary,routeTrack,validateRoutes} from '../timeline.mjs';
 
 test('Google Timeline arrays become compact daily routes',()=>{
@@ -64,6 +64,14 @@ test('week view lists plans and done in one lane, splitting only overlaps; done 
   assert.equal(blockSide(all,all.find(b=>b.id==='swim')),'plan');assert.equal(blockSide(all,all.find(b=>b.id==='dinner')),'actual');
   const swim=all.find(b=>b.id==='swim');saveSchedule(data,key,{...swim,kind:'actual'});
   const done=scheduleItems(data,key,'actual').find(b=>b.id==='swim');assert.equal(done.s,27);assert.equal(done.e,28);assert.equal(scheduleItems(data,key,'plan').length,0);
+});
+test('auto colour reads the block text: culture, exercise, food, work, people; unknown keeps its colour',()=>{
+  assert.equal(autoColor('Barbican – Rachmaninoff Piano Concerto No.2'),4);
+  assert.equal(autoColor('Richmond Running (KRC) – New Malden 돼지고기'),1);
+  assert.equal(autoColor('수영'),1);assert.equal(autoColor('Lunch'),3);assert.equal(autoColor('요리 – 도시락'),3);
+  assert.equal(autoColor('ECT – Section CAD location'),2);assert.equal(autoColor('퇴근'),2);
+  assert.equal(autoColor('친구 생일 파티'),0);
+  assert.equal(autoColor('reconnect the router'),null);assert.equal(autoColor(''),null);
 });
 test('schedule range rejects reversed times and supports midnight endpoint',()=>{
   const data=emptyJournal(),block={id:'end',kind:'actual',s:35,e:35,text:'마무리',color:0};

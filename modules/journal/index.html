@@ -249,10 +249,10 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261109e">
-<link rel="stylesheet" href="./redesign.css?v=20261109e">
+<link rel="stylesheet" href="./desk.css?v=20261109f">
+<link rel="stylesheet" href="./redesign.css?v=20261109f">
 <link rel="stylesheet" href="./notebook.css?v=20261104">
-<link rel="stylesheet" href="./grid.css?v=20261109e">
+<link rel="stylesheet" href="./grid.css?v=20261109f">
 </head>
 <body>
 <div class="book">
@@ -311,7 +311,7 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 </section>
 <section class="panel" id="weekly">
 <div class="weekly-nav"><div class="ph" id="weeklyTitle">Weekly</div><button class="navbtn" id="weekPrev" aria-label="Previous week">‹</button><input type="date" id="weekPicker" aria-label="Date in selected week"><button class="navbtn" id="weekNext" aria-label="Next week">›</button><button class="navbtn" id="weekToday">This week</button></div>
-<p class="hint">Monday to Sunday. Plans on the left, actuals on the right. Select a date to open its daily log.</p>
+<p class="hint week-hint">Monday to Sunday. Plans are light, done is filled. Select a date to open its daily log. <button type="button" class="navbtn" id="weekAutoColor">내용으로 색 칠하기</button></p>
 <div class="schedule-scroll" id="weeklySchedule" tabindex="0" aria-label="주간 시간표, 좁은 화면에서는 가로로 스크롤"></div>
 </section>
 <section class="panel" id="monthly">
@@ -381,7 +381,7 @@ Synced to your account ·
 <label class="hint"><input type="checkbox" id="scheduleGoogle"> Google에도 저장</label><p class="hint">켜면 이 블록만 Google 캘린더에 올라가고 양쪽 수정이 맞춰져요. 꺼도 양쪽 일정은 남아요.</p>
 <label class="schedule-field">Details<textarea id="scheduleText" rows="3" placeholder="What are you planning? What happened?"></textarea></label>
 <div class="schedule-times"><label class="schedule-field">Start<select id="scheduleStart"></select></label><label class="schedule-field">End<select id="scheduleEnd"></select></label></div>
-<label class="schedule-field">Colour<select id="scheduleColor"><option value="0">Red</option><option value="1">Green</option><option value="2">Blue</option><option value="3">Ochre</option><option value="4">Purple</option></select></label>
+<label class="schedule-field">Colour <small class="hint" id="scheduleColorAuto">내용을 쓰면 색이 자동으로 정해져요. 직접 고르면 그대로 둬요.</small><select id="scheduleColor"><option value="0">Red · 약속·사람</option><option value="1">Green · 운동</option><option value="2">Blue · 일</option><option value="3">Ochre · 식사</option><option value="4">Purple · 문화·여가</option></select></label>
 <label class="schedule-field">Google 대상 캘린더<select id="scheduleCalendar"></select></label><div id="scheduleTags" class="tag-picks"></div><p id="scheduleLinkState" class="hint"></p><button id="scheduleGoogleDelete" type="button" class="reset">Google 원본도 삭제</button><p id="scheduleError" class="load-error" hidden></p><div class="dialog-actions"><button type="button" class="reset" id="scheduleDelete">Delete</button><button type="button" class="authbtn" id="scheduleCancel">Cancel</button><button type="submit" class="authbtn">Save</button></div>
 </form></dialog>
 <div id="printArea"></div>
@@ -392,19 +392,19 @@ Synced to your account ·
 import {installNotebook} from './notebook-ui.mjs';
 import {allNotes,visibleByTags} from './notebook.mjs';
 import {installRoutineJournal} from '../../shared/routine-journal.mjs';
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261109e';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261109f';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261109e';
-import {createJournalSync} from './journal-sync.mjs?v=20261109e';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261109e';
-import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261109e';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule} from './schedule.mjs?v=20261109e';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261109e';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261109f';
+import {createJournalSync} from './journal-sync.mjs?v=20261109f';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261109f';
+import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261109f';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor} from './schedule.mjs?v=20261109f';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261109f';
 import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
-import {installFrame} from '../../shared/frame.mjs?v=20261109e';
+import {installFrame} from '../../shared/frame.mjs?v=20261109f';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1146,6 +1146,12 @@ function scheduleOptions(dates,compact=false){return {dates,compact,keyOf:keyOfD
     if(JSON.stringify(current)!==JSON.stringify(before)){notify('다른 곳에서 수정된 기록이에요. 다시 선택해 주세요.');refreshSchedules();return;}
     changeWithUndo('한 일로 바꿨어요.',()=>saveSchedule(db,key,{...current,kind:'actual'}));
   },
+  onDelete:(key,before)=>{
+    if(calendar.isBusy()){notify("Google 동기화 중이에요. 잠시 후 다시 눌러 주세요.");return;}
+    const current=(db.sched[key] || []).find(item=>item.id===before.id);
+    if(JSON.stringify(current)!==JSON.stringify(before)){notify('다른 곳에서 수정된 기록이에요. 다시 선택해 주세요.');refreshSchedules();return;}
+    changeWithUndo(current.google?'계획을 지웠어요. Google 원본은 남아 있어요.':'계획을 지웠어요.',()=>{db.sched[key]=db.sched[key].filter(item=>item.id!==current.id);});
+  },
   // One tap on “G”: send this block to Google (or stop syncing it). Same rules as the editor checkbox.
   onGoogle:async(key,before)=>{
     const current=(db.sched[key] || []).find(item=>item.id===before.id);
@@ -1179,6 +1185,9 @@ function openScheduleEditor(key,block){
   document.getElementById('scheduleLinkState').textContent=block.google&&block.gc?'Google 연결됨 · 연결 대상: '+block.gc.calendar:block.google?(calendar.connected()?'Google 전송 대기':'Google 재연결 필요 · Desk에 저장됨'):'Desk에만 저장';
   document.getElementById('scheduleGoogleDelete').hidden=!block.google;
   document.getElementById('scheduleColor').value=String((block.color || 0)%5);
+  // Colour follows the text until the colour is picked by hand.
+  scheduleEditing.colorPicked=false;
+  if(!block.id){const guess=autoColor(block.text);if(guess!==null)document.getElementById('scheduleColor').value=String(guess);}
   for(const [id,first,last,value] of [['scheduleStart',0,35,block.s],['scheduleEnd',1,36,block.e+1]]){
     const select=document.getElementById(id);select.textContent='';
     for(let slot=first;slot<=last;slot++){const option=document.createElement('option');option.value=String(slot);option.textContent=slotTime(slot);select.append(option);}select.value=String(value);
@@ -1205,6 +1214,15 @@ document.getElementById('scheduleForm').onsubmit=async event=>{
   }catch(error){const el=document.getElementById('scheduleError');el.textContent=error.message;el.hidden=false;return;}finally{if(submit)submit.disabled=false;}
   changeWithUndo('시간별 기록을 저장했어요.',()=>saveSchedule(db,key,updated));
   document.getElementById('scheduleDialog').close();scheduleEditing=null;
+};
+document.getElementById('scheduleText').addEventListener('input',()=>{if(!scheduleEditing||scheduleEditing.colorPicked)return;const guess=autoColor(document.getElementById('scheduleText').value);if(guess!==null)document.getElementById('scheduleColor').value=String(guess);});
+document.getElementById('scheduleColor').addEventListener('change',()=>{if(scheduleEditing)scheduleEditing.colorPicked=true;});
+// Weekly: recolour this week's blocks from their text in one go (Undo restores).
+document.getElementById('weekAutoColor').onclick=()=>{
+  if(!viewWeek)return;const keys=weekDates(viewWeek).map(keyOfDate);let n=0;
+  for(const k of keys)for(const b of db.sched[k]||[]){const guess=autoColor(b.text);if(guess!==null&&guess!==(b.color||0)%5)n++;}
+  if(!n){notify('바꿀 색이 없어요. 내용으로 알 수 없는 일정은 그대로 둬요.');return;}
+  changeWithUndo('이번 주 일정 '+n+'개의 색을 내용에 맞췄어요.',()=>{for(const k of keys)for(const b of db.sched[k]||[]){const guess=autoColor(b.text);if(guess!==null)b.color=guess;}});
 };
 document.getElementById('scheduleCancel').onclick=()=>{document.getElementById('scheduleDialog').close();scheduleEditing=null;};
 document.getElementById('scheduleDelete').onclick=()=>{

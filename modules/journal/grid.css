@@ -138,7 +138,11 @@ html body .schedule-done{position:absolute;right:2px;bottom:2px;width:22px;heigh
 html body .schedule-block:hover .schedule-done,html body .schedule-block:focus-within .schedule-done{opacity:1}
 html body .schedule-done:hover{background:var(--x);color:#fff}
 /* “G”: sync this block with Google. Outline = off (on hover), filled = on (always shown). */
-html body .schedule-google{position:absolute;right:26px;bottom:2px;width:22px;height:22px;padding:0;border:1px solid var(--c)!important;border-radius:2px;background:#fff;color:var(--x);font:600 11px/1 var(--mono);cursor:pointer;opacity:0;z-index:2}
+html body .schedule-del{position:absolute;right:26px;bottom:2px;width:22px;height:22px;padding:0;border:1px solid var(--c)!important;border-radius:2px;background:#fff;color:var(--x);font:500 14px/1 var(--mono);cursor:pointer;opacity:0;z-index:2}
+html body .schedule-block:hover .schedule-del,html body .schedule-block:focus-within .schedule-del{opacity:1}
+html body .schedule-del:hover{background:#8A2E1C;border-color:#8A2E1C!important;color:#fff}
+@media (hover:none){html body .schedule-del{opacity:1}}
+html body .schedule-google{position:absolute;right:50px;bottom:2px;width:22px;height:22px;padding:0;border:1px solid var(--c)!important;border-radius:2px;background:#fff;color:var(--x);font:600 11px/1 var(--mono);cursor:pointer;opacity:0;z-index:2}
 html body .schedule-google.solo{right:2px}
 html body .schedule-google.on{opacity:1;background:var(--x);color:#fff;border-color:var(--x)!important}
 html body .schedule-block:hover .schedule-google,html body .schedule-block:focus-within .schedule-google{opacity:1}
