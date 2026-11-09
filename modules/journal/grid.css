@@ -1,0 +1,215 @@
+/* Personal desk notebook — dot-grid spread (2026-11). Loaded after redesign.css and overrides it. */
+:root{--paper:#FBFAF6;--paper2:#F2F1EC;--card:#FFFFFF;--ink:#161616;--ink-2:#4A4945;--ink-soft:#77756F;--faint:#A3A19B;--rule:#E3E1DA;--line:#CFCDC6;--dot:#D6D4CC;
+ --accent:#2B57D9;--accent-soft:#E4E9FB;--kicker:#B4733C;--red:#161616;
+ --sans:Inter,'Noto Sans KR',system-ui,-apple-system,sans-serif;--mono:'JetBrains Mono',ui-monospace,'SFMono-Regular',Menlo,Consolas,monospace;
+ --serif:var(--sans);--font-ui:var(--sans);--font-display:var(--sans);--font-meta:var(--mono)}
+html body{font-size:13px;background-color:var(--paper)!important;background-image:radial-gradient(circle,var(--dot) .9px,transparent 1.2px)!important;background-size:14px 14px!important}
+html.in-desk body{background:transparent!important}
+html body .book{max-width:1400px!important}
+
+/* Shared type */
+html body .ph{font:600 22px/1.2 var(--mono)!important;letter-spacing:-.02em}
+html body .sub,html body .hint,html body .sched-hint{font-size:11.5px;color:var(--ink-soft)}
+html body hr.rule{border:0;border-top:3px double var(--ink-2);opacity:1;margin:10px 0 16px}
+html body .section-label,html body .fold>summary{display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin:26px 0 10px!important;padding-bottom:6px;border-bottom:3px double var(--ink-2);font:700 10.5px/1.3 var(--mono)!important;letter-spacing:.08em!important;text-transform:uppercase!important;color:var(--ink)!important;min-height:0}
+html body .section-label label{font:inherit}
+html body .section-label>span,html body .section-label>span *{font:500 9.5px/1.3 var(--mono)!important;letter-spacing:.08em!important;text-transform:uppercase;color:var(--ink-soft)!important}
+html body .section-label .reset{height:auto;min-height:0;padding:0;border:0;background:none;font:500 9.5px var(--mono);letter-spacing:.04em;text-transform:none;color:var(--accent);text-decoration:underline;text-underline-offset:3px}
+html body .fold{margin:0!important;padding:0!important;border:0!important;background:transparent!important;border-radius:0!important}
+html body .fold>summary{cursor:pointer;list-style:none}
+html body .fold>summary::after{content:'+';font:500 11px var(--mono);color:var(--ink-soft)}
+html body .fold[open]>summary::after{content:'–'}
+html body .fold[open]>summary{margin-bottom:10px!important}
+.daily-main>.section-label:first-child,.daily-side>.fold:first-child>summary,.daily-side>.section-label:first-child{margin-top:4px!important}
+
+/* Buttons */
+html body .navbtn,html body .reset,html body .he-add{height:28px;min-height:28px;padding:0 10px;border:1px solid var(--line);border-radius:2px;background:var(--card);font:500 11px var(--mono);color:var(--ink)}
+html body .navbtn:hover,html body .reset:hover,html body .he-add:hover{border-color:var(--ink)}
+html body .authbtn{border-radius:2px!important;font:600 12px var(--sans)!important}
+html body button:focus-visible,html body input:focus-visible,html body textarea:focus-visible,html body summary:focus-visible,html body select:focus-visible{outline:2px solid var(--accent)!important;outline-offset:2px}
+html body .authbar{font:500 10px var(--mono);margin:0 0 10px!important}
+html body .authbar #connectionStatus,html body .authbar .authbtn{height:24px!important;min-height:24px!important;border-radius:2px!important;font:500 10px var(--mono)!important;padding:0 8px!important}
+html body .savestate{font:500 10px var(--mono)}
+
+/* Gate */
+html body .gate{background:var(--card)!important;border:1.5px solid var(--ink)!important;border-radius:2px!important}
+html body .gate h2{font:700 26px/1.15 var(--sans)!important;letter-spacing:-.02em}
+html body .gate-kicker{font:500 9px var(--mono)!important;letter-spacing:.14em;color:var(--kicker)!important}
+html body .gate-symbols>span{font:400 26px/1 var(--mono)}
+
+/* Quick add: [• Task][○ Event][– Note] input [Add] */
+html body #daily>.adder{display:flex;align-items:center;gap:0;margin:0 0 22px!important;padding:0!important;background:transparent!important;border:0!important;border-radius:0!important}
+html body .adder .typebtn{width:auto;min-width:0;height:30px;min-height:30px;padding:0 10px;border:1px solid var(--line)!important;border-radius:0!important;background:var(--card)!important;color:var(--ink);font:500 11px var(--mono)}
+html body .adder .typebtn+.typebtn{border-left:0!important}
+html body .adder .typebtn::after{content:'\00a0\00a0' attr(aria-label)}
+html body .adder .typebtn.sel{background:var(--ink)!important;border-color:var(--ink)!important;color:#fff!important}
+html body .adder input{flex:1;min-width:0;height:30px;min-height:30px;margin:0 10px 0 14px;border:0!important;border-bottom:1px solid var(--line)!important;background:transparent!important;font:12px var(--mono);padding:0 2px!important}
+html body .adder input::placeholder{color:var(--kicker);opacity:.8}
+html body .adder .authbtn{height:30px;min-height:30px;padding:0 20px!important;background:var(--accent)!important;border-color:var(--accent)!important}
+html body .panel:not(#daily) .adder{margin-top:8px}
+html body .panel:not(#daily) .adder .typebtn::after{content:''}
+
+/* Today spread: two equal pages with a fold */
+.daily-cols{grid-template-columns:minmax(0,1fr) 1px minmax(0,1fr)!important;gap:28px!important}
+.daily-rule{background:var(--line)!important}
+
+/* First things first */
+html body .focus-list{display:flex!important;flex-direction:column;gap:0;margin:0;padding:0}
+html body .focus-list li{list-style:none}
+html body .focus-list button{display:flex!important;align-items:center;gap:10px;width:100%;min-height:30px!important;padding:4px 0!important;border:0!important;border-radius:0!important;background:transparent!important;font:13px/1.4 var(--sans);text-align:left;color:var(--ink)}
+html body .focus-list button::before{content:'★   •';white-space:pre;font:12px var(--mono);color:var(--accent);flex:none;width:42px}
+html body .focus-list button:hover{color:var(--accent)}
+html body .focus-list li.empty-copy{padding:6px 0;border:0;font-size:12px}
+
+/* Rapid log */
+html body ul.log{margin:0;padding:0}
+html body ul.log li{display:flex;align-items:center;gap:2px;min-height:30px;padding:0!important;border:0!important}
+html body .bullet{min-width:24px;width:24px;min-height:28px;padding:0;border:0;background:none;font:14px var(--mono);color:var(--ink)!important}
+html body .star{min-width:20px;width:20px;min-height:28px;padding:0;border:0;background:none;font-size:11px;color:var(--accent)!important;opacity:.0}
+html body ul.log li:hover .star,html body .star:focus-visible{opacity:.35}
+html body .star.on{opacity:1!important}
+html body .itext{min-height:28px!important;height:28px;font:13px/1.4 var(--sans)!important;border:0!important;background:transparent!important;padding:2px 0!important}
+html body #daily .sched-hint{display:none}
+html body .itext.s-done,html body .itext.s-strike{color:var(--faint)!important}
+html body .tag{border:0!important;font:500 9.5px var(--mono)!important;color:var(--kicker)!important;padding:0 4px}
+html body .item-menu{height:24px;min-height:24px;border:1px solid transparent;border-radius:2px;background:transparent;font:10px var(--mono);color:var(--faint);opacity:0}
+html body ul.log li:hover .item-menu,html body .item-menu:focus{opacity:1;border-color:var(--line)}
+html body .empty-copy{font-size:12px;color:var(--faint)!important;padding:8px 0}
+html body #daily .hint{display:none}
+
+/* Migrate */
+html body #backlogFold{background:transparent!important;padding:0!important;border-radius:0!important}
+html body #backlogFold>summary{margin-top:18px!important;border-bottom:0;padding-bottom:0;font:600 11px var(--sans)!important;text-transform:none!important;letter-spacing:0!important;color:var(--kicker)!important}
+html body #backlogFold>summary::after{content:attr(data-count);font:500 10px var(--mono);color:var(--ink-soft)}
+html body .backlog-row{display:flex;align-items:center;gap:6px;padding:3px 0 3px 24px;border:0;position:relative}
+html body .backlog-row::before{content:'•';position:absolute;left:6px;font-family:var(--mono)}
+html body .backlog-row p{display:flex;align-items:baseline;gap:8px;flex:1;margin:0;font-size:12.5px}
+html body .backlog-row small{display:inline!important;font:500 9.5px var(--mono);color:var(--kicker)!important}
+html body .backlog-row .reset{height:24px;min-height:24px;padding:0 8px;font-size:10px;font-weight:600}
+html body .backlog-row .reset.del{border-color:transparent;background:transparent;color:var(--faint);padding:0 6px}
+
+/* One line a day */
+html body .reflection{min-height:56px!important;padding:2px 0 0!important;border:0!important;border-bottom:1px solid var(--line)!important;border-radius:0!important;background:transparent!important;font:12.5px/28px var(--sans)!important;resize:vertical}
+html body .reflection::placeholder{color:var(--ink-soft)}
+
+/* Habits as checkboxes */
+html body .habit-chips{display:grid!important;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:4px 12px}
+html body .habit-chip{display:flex;align-items:center;gap:10px;height:30px;min-height:30px;padding:0!important;border:0!important;border-radius:0!important;background:transparent!important;font:12.5px var(--sans)!important;color:var(--ink)!important;text-align:left}
+html body .habit-chip::before{content:'';flex:none;width:13px;height:13px;border:1.5px solid var(--ink);background:var(--card)}
+html body .habit-chip[aria-pressed="true"]{background:transparent!important;color:var(--ink)!important}
+html body .habit-chip[aria-pressed="true"]::before{background:var(--ink)}
+
+/* Schedule: plan = soft blue, actual = outlined */
+html body .schedule-scroll{margin-top:4px}
+html body .schedule-grid{border:0!important;border-radius:0!important;background:transparent!important;overflow:visible}
+html body .schedule-corner{height:auto;padding:0;border:0}
+html body .schedule-day-head{height:auto;background:transparent!important;border:0}
+html body .schedule-day-head.is-today{box-shadow:none}
+html body .schedule-grid:not(.weekly-grid) .schedule-date{display:none}
+html body .schedule-labels{height:24px;column-gap:14px}
+html body .weekly-grid .schedule-labels{column-gap:4px}
+html body .schedule-labels button{min-height:0;height:24px;padding:0 4px;border:0!important;background:none;text-align:left;font:500 9px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--kicker)}
+html body .schedule-labels button:hover{color:var(--accent)}
+html body .schedule-ruler span{font:500 9px var(--mono);color:var(--ink-soft)}
+html body .schedule-day{border-left:0!important;gap:0 14px}
+html body .schedule-lane,html body .schedule-lane.actual{border:0!important;background:transparent!important;background-image:none!important}
+html body .schedule-block{border:0!important;border-radius:0!important;box-shadow:none!important}
+html body .schedule-lane.plan .schedule-block,html body .schedule-lane.plan .schedule-block[class*=color-]{background:var(--accent-soft)!important;border:0!important;border-bottom:1px solid #B9C6F2!important}
+html body .schedule-lane.plan .schedule-block .schedule-block-edit,html body .schedule-lane.plan .schedule-block[class*=color-] .schedule-block-edit{color:#23409E!important}
+html body .schedule-lane.actual .schedule-block,html body .schedule-lane.actual .schedule-block[class*=color-]{background:var(--card)!important;border:1.5px solid var(--ink)!important}
+html body .schedule-lane.actual .schedule-block .schedule-block-edit{color:var(--ink)!important}
+html body .schedule-block-edit{padding:4px 16px 4px 6px!important;font:11px/1.3 var(--sans)!important}
+html body .schedule-block-edit small,html body .schedule-lane .schedule-block small{order:2;font:9px var(--mono)!important;color:inherit!important;opacity:.7}
+html body .schedule-block-edit{display:flex!important;flex-direction:column}
+html body .schedule-grip.move{color:var(--faint)!important}
+html body .schedule-selection{background:rgba(43,87,217,.1)!important;border:1px dashed var(--accent)!important}
+
+/* Weekly grid */
+html body .weekly-grid .schedule-day-head,html body .weekly-grid .schedule-day{border-left:1px solid var(--line)!important}
+html body .weekly-grid .schedule-day{gap:0 4px;padding:0 3px}
+html body .weekly-grid .schedule-date{height:30px;font:600 11px var(--mono);letter-spacing:.04em;text-align:left;padding:0 6px;color:var(--ink)}
+html body .weekly-grid .schedule-day-head.is-today .schedule-date{color:var(--accent)}
+html body .weekly-grid .schedule-day-head.is-today{box-shadow:inset 0 2px var(--accent)!important}
+html body .weekly-grid .schedule-labels{padding:0 3px}
+
+/* In the desk the page header steps weeks and months, so hide duplicate controls */
+html.in-desk body .weekly-nav{display:none!important}
+html.in-desk body #weekly>.hint{margin:0 0 8px}
+html.in-desk body #monthly .mtitle-row #monPrev,html.in-desk body #monthly .mtitle-row #monNext,html.in-desk body #monthly .mtitle-row #monToday,html.in-desk body #monthly .mtitle-row .ph{display:none!important}
+html.in-desk body #monthly .mtitle-row{justify-content:flex-end}
+html.in-desk body #monthly>hr.rule{display:none}
+html.in-desk body #index>.ph,html.in-desk body #key>.ph,html.in-desk body #index>hr.rule,html.in-desk body #key>hr.rule{display:none}
+
+/* Monthly grid */
+.month-grid{border:0!important;border-radius:0!important;background:transparent!important;border-top:3px double var(--ink-2)!important}
+.mg-head{background:transparent!important;border-bottom:1px solid var(--ink)}
+.mg-wd{font:500 9px var(--mono)!important;letter-spacing:.12em!important;text-align:left!important;padding:6px 6px!important;color:var(--ink-soft)!important}
+.mg-wk{font:500 8.5px var(--mono)!important;color:var(--faint)!important}
+.mg-row+.mg-row{border-top:1px solid var(--line)!important}
+.mg-cell{background-color:transparent!important;border-left:1px solid var(--rule)!important;padding:6px!important}
+.mg-cell.empty{background:transparent!important}
+.mg-cell.empty .mg-num{color:var(--faint)}
+.mg-num{font:600 11px var(--mono)!important}
+.mg-cell.today{box-shadow:inset 0 0 0 1.5px var(--accent)!important;background-color:rgba(228,233,251,.35)!important}
+.mg-cell.today .mg-num{background:transparent!important;color:var(--accent)!important;padding:0!important;min-width:0!important;height:auto!important}
+.mg-cell:not(.empty):hover{box-shadow:inset 0 0 0 1.5px var(--ink)!important}
+.mg-line{font:10px/1.35 var(--sans)!important;padding:1px 4px;border:1px solid var(--ink);background:var(--card)}
+.mg-line.line{font:italic 10px/1.35 var(--sans)!important;border:0;background:transparent;padding:0}
+.mg-line.plan,.mg-line.google,.mg-line.gtime{border:0;background:var(--accent-soft);color:#23409E}
+.mg-line.gday{border:0}
+.month-foot{font:500 9px var(--mono)!important;letter-spacing:.08em}
+
+/* Minicalendar, future, tracker, key */
+html body .mc-cell{border-radius:0;font:11px var(--mono)}
+html body .mc-cell.today{border-color:var(--accent);color:var(--accent)}
+html body .mc-cell.sel{background:var(--ink)!important;color:#fff!important}
+html body .mc-cell.has::after{background:var(--accent)}
+html body .fbox h4{font:700 10.5px var(--mono)!important;letter-spacing:.08em;text-transform:uppercase;border-bottom:3px double var(--ink-2);padding-bottom:6px}
+html body .htable thead th{font:500 9px var(--mono)!important;letter-spacing:.1em;border-bottom:1px solid var(--ink)}
+html body .hdot{border-radius:0!important;border:1.5px solid var(--ink)!important}
+html body .hdot.on{background:var(--ink)!important}
+html body .key-grid .sym{font-family:var(--mono)}
+html body .key-grid .sym.red{color:var(--accent)}
+
+/* Journal page */
+html body .journal-sidebar{background:transparent!important;border:0!important;border-right:1px solid var(--line)!important;border-radius:0!important}
+html body .journal-reflection{border-radius:0!important;background:var(--card)!important;border:1px solid var(--line)!important}
+html body .jtext,html body textarea.note{font:14px/28px var(--sans)!important;background:transparent!important;border:0!important}
+html body .jphoto{border-radius:0!important}
+
+/* Places */
+html body .route-map,html body .route-empty,html body .monthly-route-card{border-radius:0!important;border:1.5px solid var(--ink)!important;background:var(--card)}
+html body .route-stop{background:var(--accent)!important}
+
+/* Footer, toast, dialogs */
+html body footer{border-top:1px solid var(--rule)!important;font:500 10px var(--mono)!important;color:var(--ink-soft)}
+html body footer .reset{border-color:transparent;background:transparent;font-size:10px}
+html body .toast{background:var(--ink);color:#fff;border-radius:2px;font-size:12px}
+html body dialog{border:1.5px solid var(--ink)!important;border-radius:2px!important}
+html body dialog h2,#dayDialog h2{font:700 20px/1.2 var(--sans)!important}
+#dayDialog .dd-head{border-bottom:3px double var(--ink-2)!important}
+#dayDialog .dd-close{border-radius:2px!important}
+.dd-chips span{border-radius:2px!important}
+.dd-photo{border-radius:0!important}
+
+@media(max-width:900px){
+ .daily-cols{grid-template-columns:1fr!important;gap:0!important}
+ .daily-side>.fold:first-child>summary{margin-top:26px!important}
+}
+@media(max-width:640px){
+ html body #daily>.adder{flex-wrap:wrap;row-gap:8px}
+ html body .adder input{order:5;flex-basis:100%;margin:0!important}
+ html body .adder .authbtn{margin-left:auto}
+ html body .adder .typebtn::after{content:''}
+ html body .adder .typebtn{min-width:34px}
+ html body .habit-chips{grid-template-columns:1fr 1fr}
+ html body .focus-list{background:transparent!important;border:0!important;border-radius:0!important;padding:0!important}
+ html body .focus-list button{border:0!important;padding:4px 0!important}
+ html body .item-menu{opacity:1}
+}
+
+/* Tags & notes panels (notebook.css) in the grid style */
+html body .notebook{border-top:3px double var(--ink-2)}
+html body .note-card,html body .routine-journal{border:1px solid var(--line)!important;border-radius:0!important;background:var(--card)}
+html body .tag-picks label{border-radius:2px!important;font:500 10px var(--mono)}
+html body .notebook input,html body .notebook select,html body .notebook-dialog input,html body .notebook-dialog select,html body .notebook-dialog textarea{border-radius:2px!important;border-color:var(--line)!important}

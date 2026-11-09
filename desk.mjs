@@ -1,5 +1,5 @@
-import {dateKey,validDate,shiftDay,mondayOf} from './shared/dates.mjs?v=20261104a';
-import {parseRoute,journalViews} from './shared/navigation.mjs?v=20261104a';
+import {dateKey,validDate,shiftDay,mondayOf} from './shared/dates.mjs?v=20261109a';
+import {parseRoute,journalViews} from './shared/navigation.mjs?v=20261109a';
 const $=id=>document.getElementById(id),modules=['journal','routine'];
 const labels={today:['Today','Your daily log, with the week and month alongside.'],journal:['Journal','Your complete notebook. Eight views, the same records.'],routine:['Routine','Exercise, meals and sleep. Plan it, then log it.'],settings:['Settings','Connections, storage and backups.']};
 let selected=dateKey(),view='today',journalTab='daily',pendingAction=null,routineInteractive=false,lastRoutine=null;
@@ -10,13 +10,35 @@ function setDate(value){
  if(!validDate(value)){$('date').value=selected;return;} selected=value;$('date').value=value;
  const date=new Date(value+'T12:00:00');
  $('period').textContent=date.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
- $('footer-date').textContent=value.replaceAll('-',' / ');
  $('stamp-month').textContent=date.toLocaleDateString('en-GB',{month:'short'}).toUpperCase();$('stamp-day').textContent=date.getDate();$('stamp-weekday').textContent=date.toLocaleDateString('en-GB',{weekday:'short'}).toUpperCase();
- $('big-date').textContent=String(date.getMonth()+1).padStart(2,'0')+'.'+String(date.getDate()).padStart(2,'0');$('big-weekday').textContent=date.toLocaleDateString('en-GB',{weekday:'long'}).toUpperCase();$('big-week').textContent=date.getFullYear()+' · Week '+isoWeek(date);
+ renderHeader();$('routine-label').textContent='Routine · W'+pad(isoWeek(date));
  $('week-strip').replaceChildren();
- for(let i=0;i<7;i++){const key=shiftDay(mondayOf(value),i),day=new Date(key+'T12:00:00'),button=document.createElement('button');button.type='button';button.setAttribute('aria-label',day.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));button.setAttribute('aria-pressed',String(key===selected));const label=document.createElement('span'),num=document.createElement('b');label.textContent=day.toLocaleDateString('en-GB',{weekday:'short'}).slice(0,2).toUpperCase();num.textContent=day.getDate();button.append(label,num);button.onclick=()=>setDate(key);$('week-strip').append(button);}
+ for(let i=0;i<7;i++){const key=shiftDay(mondayOf(value),i),day=new Date(key+'T12:00:00'),button=document.createElement('button');button.type='button';button.setAttribute('aria-label',day.toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long'}));button.setAttribute('aria-pressed',String(key===selected));if(key===dateKey())button.classList.add('is-today');const label=document.createElement('span'),num=document.createElement('b');label.textContent=day.toLocaleDateString('en-GB',{weekday:'short'}).charAt(0);num.textContent=String(day.getDate()).padStart(2,'0');button.append(label,num);button.onclick=()=>setDate(key);$('week-strip').append(button);}
  if(lastRoutine?.week!==mondayOf(value)){$('routine-value').textContent='—';$('routine-note').textContent='Open Routine to see this week’s activity.';}
  modules.forEach(m=>send(m));
+}
+const pad=n=>String(n).padStart(2,'0');
+const short=d=>d.toLocaleDateString('en-GB',{month:'short'});
+// The big header follows the open notebook page: a day, a week or a month.
+function headerMode(){return view==='journal'&&['weekly','monthly','future'].includes(journalTab)?journalTab:'daily';}
+function renderHeader(){
+ const date=new Date(selected+'T12:00:00'),mode=headerMode(),y=date.getFullYear();let big,kicker,title,foot;
+ if(mode==='weekly'){const start=new Date(mondayOf(selected)+'T12:00:00'),end=new Date(start);end.setDate(end.getDate()+6);const w=isoWeek(date);
+  big='W'+pad(w);kicker='Weekly log';title=short(start)+' '+pad(start.getDate())+' – '+(start.getMonth()===end.getMonth()?'':short(end)+' ')+pad(end.getDate());foot='Weekly · '+y+' W'+pad(w);}
+ else if(mode==='monthly'){big=pad(date.getMonth()+1);kicker='Monthly log · '+y;title=date.toLocaleDateString('en-GB',{month:'long'});foot='Monthly · '+y+'.'+pad(date.getMonth()+1);}
+ else if(mode==='future'){big=String(y);kicker='Future log';title='From '+date.toLocaleDateString('en-GB',{month:'long'});foot='Future · '+y;}
+ else{big=pad(date.getMonth()+1)+'.'+pad(date.getDate());kicker=(view==='journal'&&journalTab==='journal'?'Journal':'Daily log')+' · Week '+isoWeek(date);title=date.toLocaleDateString('en-GB',{weekday:'long'});foot='Daily · '+selected.replaceAll('-','.');}
+ $('big-date').textContent=big;$('big-week').textContent=kicker;$('big-weekday').textContent=title;$('footer-date').textContent=foot;
+ document.body.dataset.header=mode;
+ const unit=mode==='weekly'?'week':mode==='monthly'?'month':mode==='future'?'month':'day';
+ $('previous').setAttribute('aria-label','Previous '+unit);$('next').setAttribute('aria-label','Next '+unit);
+ $('now').textContent=mode==='weekly'?'This week':mode==='monthly'?'This month':'Today';
+}
+function step(direction){
+ const mode=headerMode();
+ if(mode==='weekly')return setDate(shiftDay(selected,7*direction));
+ if(mode==='monthly'||mode==='future'){const d=new Date(selected+'T12:00:00'),day=d.getDate();d.setDate(1);d.setMonth(d.getMonth()+direction);const last=new Date(d.getFullYear(),d.getMonth()+1,0).getDate();d.setDate(Math.min(day,last));return setDate(dateKey(d));}
+ setDate(shiftDay(selected,direction));
 }
 function updateNavigation(){
  document.body.dataset.journalTab=journalTab;
@@ -24,6 +46,7 @@ function updateNavigation(){
  document.querySelectorAll('[data-journal]').forEach(a=>{if(view==='journal'&&a.dataset.journal===journalTab)a.setAttribute('aria-current','page');else a.removeAttribute('aria-current');});
  $('breadcrumb').textContent='PERSONAL DESK / '+labels[view][0].toUpperCase()+(view==='journal'?' / '+journalViews[journalTab].toUpperCase():'');
  $('journal-heading').textContent=view==='today'?'Daily log':journalViews[journalTab];
+ renderHeader();
 }
 function route(){
  window.scrollTo({top:0,behavior:'instant'});
@@ -33,7 +56,7 @@ function route(){
  $('period').textContent=new Date(selected+'T12:00:00').toLocaleDateString('en-GB',{weekday:'long',day:'numeric',month:'long',year:'numeric'}).toUpperCase();
  $('today-layout').hidden=!['today','journal'].includes(view);$('today-layout').classList.toggle('full',view==='journal');$('overview').hidden=view!=='today';
  for(const m of ['routine','settings'])$(m+'-panel').hidden=view!==m;
- if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261104a';
+ if(view==='routine'&&!$('routine-frame').getAttribute('src'))$('routine-frame').src='./modules/routine/index.html?v=20261109a';
  send('journal');send('routine',view==='routine'&&routineInteractive?pendingAction:undefined);
  if(view==='routine'&&routineInteractive)pendingAction=null;
 }
@@ -50,7 +73,7 @@ window.addEventListener('message',event=>{
  if(d.type==='busy'){$('notice').textContent='A Routine editor is open. Save or close it before changing the date.';$('notice').hidden=false;}
  if(d.type==='summary'&&d.module==='routine'&&d.ready&&d.week===mondayOf(selected)){lastRoutine=d;$('routine-value').replaceChildren(document.createTextNode(d.minutes+' '));const unit=document.createElement('small');unit.textContent='min';$('routine-value').append(unit);$('routine-note').textContent='Logged aerobic activity this week.';}
 });
-$('previous').onclick=()=>setDate(shiftDay(selected,-1));$('next').onclick=()=>setDate(shiftDay(selected,1));$('now').onclick=()=>setDate(dateKey());$('date').onchange=e=>setDate(e.target.value);
+$('previous').onclick=()=>step(-1);$('next').onclick=()=>step(1);$('now').onclick=()=>setDate(dateKey());$('date').onchange=e=>setDate(e.target.value);
 document.querySelectorAll('[data-action]').forEach(button=>button.onclick=()=>{pendingAction=button.dataset.action;location.hash='routine';if(view==='routine')route();});
 $('journal-retry').onclick=()=>{$('journal-frame').src='./modules/journal/index.html';$('journal-fallback').hidden=true;};
 setTimeout(()=>{if(!ready.has('journal')){$('journal-loading').hidden=true;$('journal-fallback').hidden=false;}},12000);

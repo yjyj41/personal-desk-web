@@ -29,15 +29,15 @@ export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,compact=f
   host.textContent='';
   const grid=document.createElement('div');grid.className='schedule-grid'+(compact?' weekly-grid':'');
   grid.style.setProperty('--day-count',String(dates.length));
-  const corner=document.createElement('div');corner.className='schedule-corner';corner.textContent='시간';grid.append(corner);
+  const corner=document.createElement('div');corner.className='schedule-corner';corner.textContent='';grid.append(corner);
   const today=keyOf(new Date());
   for(const date of dates){
     const head=document.createElement('div');head.className='schedule-day-head'+(keyOf(date)===today?' is-today':'');
     const title=document.createElement(compact?'button':'div');title.className='schedule-date';
-    title.textContent=compact?['일','월','화','수','목','금','토'][date.getDay()]+' '+(date.getMonth()+1)+'/'+date.getDate():'시간별 기록';
+    title.textContent=compact?['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][date.getDay()]+' '+String(date.getDate()).padStart(2,'0'):'Schedule';
     if(compact){title.type='button';title.setAttribute('aria-label',keyOf(date)+' 오늘 탭에서 열기');title.onclick=()=>onDay(date);}
     const labels=document.createElement('div');labels.className='schedule-labels';
-    for(const kind of ['plan','actual']){const button=document.createElement('button');button.type='button';button.textContent=(kind==='plan'?'계획':'실제')+' ＋';button.onclick=()=>onEdit(keyOf(date),{kind,s:0,e:1,text:'',color:kind==='plan'?2:randomScheduleColor()});labels.append(button);}
+    for(const kind of ['plan','actual']){const button=document.createElement('button');button.type='button';button.textContent=(kind==='plan'?'Plan':'Actual')+' +';button.setAttribute('aria-label',(kind==='plan'?'계획':'실제')+' 추가');button.onclick=()=>onEdit(keyOf(date),{kind,s:0,e:1,text:'',color:kind==='plan'?2:randomScheduleColor()});labels.append(button);}
     head.append(title,labels);grid.append(head);
   }
   const ruler=document.createElement('div');ruler.className='schedule-ruler';
