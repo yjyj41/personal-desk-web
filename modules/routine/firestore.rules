@@ -1,0 +1,26 @@
+rules_version = '2';
+// Reference copy. The rules deployed to Firebase use the owner's real Google address in place of
+// owner@example.com; replace it locally before any `firebase deploy`, and do not commit it.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function owner(uid) {
+      return request.auth != null && request.auth.uid == uid
+        && request.auth.token.email_verified == true
+        && request.auth.token.email == 'owner@example.com';
+    }
+    match /routine160/{uid} {
+      allow get: if owner(uid);
+      allow list, delete: if false;
+      function valid() {
+        return request.resource.data.keys().hasAll(['payload', 'revision', 'updatedAt'])
+          && request.resource.data.keys().hasOnly(['payload', 'revision', 'updatedAt'])
+          && request.resource.data.payload is string
+          && request.resource.data.payload.size() <= 900000
+          && request.resource.data.revision is int
+          && request.resource.data.updatedAt == request.time;
+      }
+      allow create: if owner(uid) && valid() && request.resource.data.revision == 1;
+      allow update: if owner(uid) && valid() && request.resource.data.revision == resource.data.revision + 1;
+    }
+  }
+}

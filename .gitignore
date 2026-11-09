@@ -1,0 +1,12 @@
+node_modules/
+dist/
+work/
+.env*
+!.env.example
+*.tsbuildinfo
+*.log
+.firebase/
+*.sqlite*
+*.db
+*-backup*.json
+_site/
