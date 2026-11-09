@@ -1,4 +1,4 @@
-import {clone, mergeJournal, resolveJournal} from './journal-core.mjs?v=20261109b';
+import {clone, mergeJournal, resolveJournal} from './journal-core.mjs?v=20261109c';
 
 // The adapter performs a Firestore transaction against the existing journals/{uid}.
 // No collection migration or security-rule change is required.

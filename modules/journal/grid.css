@@ -99,7 +99,7 @@ html body .habit-chip::before{content:'';flex:none;width:13px;height:13px;border
 html body .habit-chip[aria-pressed="true"]{background:transparent!important;color:var(--ink)!important}
 html body .habit-chip[aria-pressed="true"]::before{background:var(--ink)}
 
-/* Schedule: plan = soft blue, actual = outlined */
+/* Schedule */
 html body .schedule-scroll{margin-top:4px}
 html body .schedule-grid{border:0!important;border-radius:0!important;background:transparent!important;overflow:visible}
 html body .schedule-corner{height:auto;padding:0;border:0}
@@ -114,10 +114,17 @@ html body .schedule-ruler span{font:500 9px var(--mono);color:var(--ink-soft)}
 html body .schedule-day{border-left:0!important;gap:0 14px}
 html body .schedule-lane,html body .schedule-lane.actual{border:0!important;background:transparent!important;background-image:none!important}
 html body .schedule-block{border:0!important;border-radius:0!important;box-shadow:none!important}
-html body .schedule-lane.plan .schedule-block,html body .schedule-lane.plan .schedule-block[class*=color-]{background:var(--accent-soft)!important;border:0!important;border-bottom:1px solid #B9C6F2!important}
-html body .schedule-lane.plan .schedule-block .schedule-block-edit,html body .schedule-lane.plan .schedule-block[class*=color-] .schedule-block-edit{color:#23409E!important}
-html body .schedule-lane.actual .schedule-block,html body .schedule-lane.actual .schedule-block[class*=color-]{background:var(--card)!important;border:1.5px solid var(--ink)!important}
-html body .schedule-lane.actual .schedule-block .schedule-block-edit{color:var(--ink)!important}
+/* Block colours follow the editor's Colour choice: Red, Green, Blue, Ochre, Purple.
+   Plan = tinted with a colour bar on the left; actual = tinted with a full colour outline. */
+html body .schedule-block{--c:#2B57D9;--t:#E4E9FB;--x:#1F3E9C}
+html body .schedule-block.color-0{--c:#C2452D;--t:#F8E1DA;--x:#8A2E1C}
+html body .schedule-block.color-1{--c:#3F7D5A;--t:#DCEDE2;--x:#2A5A3F}
+html body .schedule-block.color-2{--c:#2B57D9;--t:#E4E9FB;--x:#1F3E9C}
+html body .schedule-block.color-3{--c:#B4733C;--t:#F5E7D4;--x:#7E4E24}
+html body .schedule-block.color-4{--c:#7A4FB0;--t:#ECE2F6;--x:#56357F}
+html body .schedule-lane.plan .schedule-block,html body .schedule-lane.plan .schedule-block[class*=color-]{background:var(--t)!important;border:0!important;border-left:3px solid var(--c)!important}
+html body .schedule-lane.actual .schedule-block,html body .schedule-lane.actual .schedule-block[class*=color-]{background:var(--t)!important;border:1.5px solid var(--c)!important}
+html body .schedule-lane .schedule-block .schedule-block-edit,html body .schedule-lane .schedule-block[class*=color-] .schedule-block-edit{color:var(--x)!important}
 html body .schedule-block-edit{padding:4px 16px 4px 6px!important;font:11px/1.3 var(--sans)!important}
 html body .schedule-block-edit small,html body .schedule-lane .schedule-block small{order:2;font:9px var(--mono)!important;color:inherit!important;opacity:.7}
 html body .schedule-block-edit{display:flex!important;flex-direction:column}
