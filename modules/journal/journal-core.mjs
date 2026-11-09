@@ -1,6 +1,6 @@
 import {validateNotebook} from './notebook.mjs';
 // Pure data operations shared by the app and regression tests.
-import {validateRoutes} from './timeline.mjs?v=20261109d';
+import {validateRoutes} from './timeline.mjs?v=20261109e';
 
 export const clone = value => value === undefined ? undefined : JSON.parse(JSON.stringify(value));
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
