@@ -249,10 +249,10 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261109f">
-<link rel="stylesheet" href="./redesign.css?v=20261109f">
+<link rel="stylesheet" href="./desk.css?v=20261110a">
+<link rel="stylesheet" href="./redesign.css?v=20261110a">
 <link rel="stylesheet" href="./notebook.css?v=20261104">
-<link rel="stylesheet" href="./grid.css?v=20261109f">
+<link rel="stylesheet" href="./grid.css?v=20261110a">
 </head>
 <body>
 <div class="book">
@@ -392,19 +392,19 @@ Synced to your account ·
 import {installNotebook} from './notebook-ui.mjs';
 import {allNotes,visibleByTags} from './notebook.mjs';
 import {installRoutineJournal} from '../../shared/routine-journal.mjs';
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261109f';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261110a';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261109f';
-import {createJournalSync} from './journal-sync.mjs?v=20261109f';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261109f';
-import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261109f';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor} from './schedule.mjs?v=20261109f';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261109f';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261110a';
+import {createJournalSync} from './journal-sync.mjs?v=20261110a';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261110a';
+import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261110a';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor} from './schedule.mjs?v=20261110a';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261110a';
 import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
-import {installFrame} from '../../shared/frame.mjs?v=20261109f';
+import {installFrame} from '../../shared/frame.mjs?v=20261110a';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);

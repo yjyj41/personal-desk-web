@@ -1,5 +1,5 @@
 import {initializeApp,getApps} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
-import {getAuth,signInWithCredential,GoogleAuthProvider,onAuthStateChanged,signOut,setPersistence,indexedDBLocalPersistence} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import {getAuth,signInWithCredential,signInWithPopup,GoogleAuthProvider,onAuthStateChanged,signOut,setPersistence,indexedDBLocalPersistence} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import {getFirestore,doc,onSnapshot} from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js';
 import {exerciseCards,sameGoogleUser} from './routine-records.mjs';
 // Same app name and IndexedDB persistence as Routine. No record migration or token messages.
@@ -22,15 +22,23 @@ export function installRoutineJournal({auth,getDate,reauthorize,onChange=()=>{}}
       catch{records=[];state='운동 기록 형식을 확인해 주세요.';render();}
     },()=>{if(epoch===generation){records=[];state='운동 기록을 읽지 못했어요. 연결을 다시 확인하세요.';render();}});
   }
+  const NEEDS_ONCE='운동로그는 이 기기에서 한 번만 따로 연결하면 돼요. 아래 버튼을 눌러 주세요.';
   async function accept(result){await initialize();const credential=GoogleAuthProvider.credentialFromResult(result);if(!credential)throw Error('Google 계정 인증이 필요해요.');
-    // Google access token is accepted across the two existing Firebase OAuth clients.
-    await signInWithCredential(routineAuth,GoogleAuthProvider.credential(null,credential.accessToken));watch();
+    // Works only when the Routine project trusts the Journal OAuth client; otherwise fall back to a one-time popup.
+    try{await signInWithCredential(routineAuth,GoogleAuthProvider.credential(null,credential.accessToken));}
+    catch(e){console.warn('Routine shared sign-in failed',e);state=NEEDS_ONCE;render();return;}
+    watch();
+  }
+  async function connectDirect(){await initialize();const provider=new GoogleAuthProvider();const email=auth.currentUser?.email;if(email)provider.setCustomParameters({login_hint:email,prompt:'select_account'});
+    await signInWithPopup(routineAuth,provider);
+    if(!sameGoogleUser(auth.currentUser,routineAuth.currentUser)){await signOut(routineAuth);throw Error('저널과 같은 Google 계정을 골라 주세요.');}
+    watch();
   }
   function render(){for(const {host,id} of hosts){host.replaceChildren();const heading=document.createElement('h3');heading.textContent='이날의 운동';host.append(heading);const day=getDate(id),items=records.filter(n=>n.date===day);const info=document.createElement('p');info.textContent=state;host.append(info);
     for(const item of items){const p=document.createElement('p');p.textContent=(item.time?item.time+' · ':'')+item.text;host.append(p);if(item.note){const note=document.createElement('p');note.textContent=item.note;host.append(note);}}
     if(records.length&&!items.length){const p=document.createElement('p');p.textContent='이날 기록한 운동이 없어요.';host.append(p);}
     const open=document.createElement('a');open.textContent='운동로그 열기 →';open.href='../../index.html#routine';open.target='_top';host.append(open);
-    if(auth.currentUser&&!sameGoogleUser(auth.currentUser,routineAuth?.currentUser)){const b=document.createElement('button');b.className='authbtn';b.textContent='Google 계정으로 함께 연결';b.onclick=async()=>{b.disabled=true;try{await accept(await reauthorize());}catch(e){state=e.message;render();}};host.append(b);}
+    if(auth.currentUser&&!sameGoogleUser(auth.currentUser,routineAuth?.currentUser)){const b=document.createElement('button');b.className='authbtn';b.textContent='운동로그 연결 (한 번만)';b.onclick=async()=>{b.disabled=true;try{await connectDirect();}catch(e){state=e.code==='auth/popup-closed-by-user'?NEEDS_ONCE:'연결하지 못했어요: '+e.message;render();}};host.append(b);}
   }}
   onAuthStateChanged(auth,()=>{initialize().then(watch).catch(e=>{state=e.message;render();});});
   return {accept,render,logout:async()=>{++generation;off?.();records=[];if(routineAuth)await signOut(routineAuth);render();}};
