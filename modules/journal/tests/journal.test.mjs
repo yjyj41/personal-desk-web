@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import {clone,emptyJournal,mergeJournal,resolveJournal,validateJournal,moveTask,previousOpenTasks,journalEntryDates} from '../journal-core.mjs';
 import {createJournalSync} from '../journal-sync.mjs';
-import {weekDates,scheduleKind,scheduleItems,saveSchedule,slotTime,randomScheduleColor,blockSide,autoColor} from '../schedule.mjs';
+import {weekDates,scheduleKind,scheduleItems,saveSchedule,slotTime,randomScheduleColor,blockSide,autoColor,exerciseBlocks} from '../schedule.mjs';
 import {parseTimelineExport,routePointCount,routeSummary,routeTrack,validateRoutes} from '../timeline.mjs';
 
 test('Google Timeline arrays become compact daily routes',()=>{
@@ -217,4 +217,16 @@ test('conflict caused by a new edit during save still honors the cloud choice',a
   const remote=clone(base);remote.journal.today='other device';h.remote=remote;h.resume();await pending;
   assert.ok(h.engine.getConflict());assert.equal(h.remote.journal.today,'other device');
   h.engine.resolve('remote');await h.engine.flush();assert.equal(h.engine.getData().journal.today,'other device');assert.equal(h.engine.getData().journal.other,'first');
+});
+
+test('exercise records become read-only done blocks on their day', () => {
+  const records=[
+    {id:'a',date:'2026-11-10',time:'20:00',minutes:20,text:'상체 · 20분'},
+    {id:'b',date:'2026-11-10',time:'07:15',minutes:60,text:'Running · 60분'},
+    {id:'c',date:'2026-11-10',time:'',minutes:30,text:'시간 없음'},
+    {id:'d',date:'2026-11-10',time:'05:00',minutes:30,text:'너무 이름'},
+    {id:'e',date:'2026-11-11',time:'20:00',minutes:20,text:'다른 날'}
+  ];
+  assert.deepEqual(exerciseBlocks(records,'2026-11-10').map(b=>[b.id,b.s,b.e]),[['ex-a',28,28],['ex-b',2,4]]);
+  assert.deepEqual(exerciseBlocks(undefined,'2026-11-10'),[]);
 });

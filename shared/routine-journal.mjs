@@ -12,7 +12,7 @@ export function installRoutineJournal({auth,getDate,reauthorize,onChange=()=>{}}
     return init;
   }
   function watch(){
-    const epoch=++generation;off?.();records=[];
+    const epoch=++generation;off?.();records=[];onChange(records);
     if(!auth.currentUser){state='로그인하면 운동 기록이 표시됩니다.';render();return;}
     if(!sameGoogleUser(auth.currentUser,routineAuth?.currentUser)){state='같은 Google 계정으로 운동 기록을 연결하세요.';render();return;}
     state='운동 기록 불러오는 중…';render();

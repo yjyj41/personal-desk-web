@@ -249,10 +249,10 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261110a">
-<link rel="stylesheet" href="./redesign.css?v=20261110a">
+<link rel="stylesheet" href="./desk.css?v=20261111a">
+<link rel="stylesheet" href="./redesign.css?v=20261111a">
 <link rel="stylesheet" href="./notebook.css?v=20261104">
-<link rel="stylesheet" href="./grid.css?v=20261110a">
+<link rel="stylesheet" href="./grid.css?v=20261111a">
 </head>
 <body>
 <div class="book">
@@ -392,19 +392,19 @@ Synced to your account ·
 import {installNotebook} from './notebook-ui.mjs';
 import {allNotes,visibleByTags} from './notebook.mjs';
 import {installRoutineJournal} from '../../shared/routine-journal.mjs';
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261110a';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261111a';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261110a';
-import {createJournalSync} from './journal-sync.mjs?v=20261110a';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261110a';
-import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261110a';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor} from './schedule.mjs?v=20261110a';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261110a';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261111a';
+import {createJournalSync} from './journal-sync.mjs?v=20261111a';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261111a';
+import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261111a';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor,exerciseBlocks} from './schedule.mjs?v=20261111a';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261111a';
 import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
-import {installFrame} from '../../shared/frame.mjs?v=20261110a';
+import {installFrame} from '../../shared/frame.mjs?v=20261111a';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1133,6 +1133,8 @@ async function exportPDF(){ const btn=document.getElementById('exportPdf'); cons
 /* Shared planned/actual schedule in daily and weekly views. */
 const keyOfDate=date=>dayKey(date.getFullYear(),date.getMonth(),date.getDate());
 function scheduleOptions(dates,compact=false){return {dates,compact,keyOf:keyOfDate,getData:()=>db,onEdit:openScheduleEditor,
+  extras:key=>exerciseBlocks(exerciseRecords,key),
+  onExtra:()=>{window.top.location.href=new URL('../../index.html#routine',location.href).href;},
   onDay:date=>{selectDay(date);document.querySelector('[data-p="daily"]').click();document.getElementById('scheduleFold').open=true;},
   onMove:(key,block,before)=>{
     if(calendar.isBusy()){notify("Google 동기화 중이에요. 잠시 후 다시 옮겨 주세요.");refreshSchedules();return;}
@@ -1351,7 +1353,8 @@ const calendar=installCalendar({
 
 
 const notebook=installNotebook({getData:()=>db,ready:()=>!!uid&&!!sync?.isReady()&&!sync?.getConflict(),save,getDate:()=>viewJournal?dayKey(viewJournal.y,viewJournal.m,viewJournal.d):keyOfDate(new Date()),onDate:key=>selectJournalDate(new Date(key+'T12:00:00')),refresh:()=>refreshSchedules()});
-const routineJournal=installRoutineJournal({auth,getDate:id=>{const v=id==='dailyEmpty'?viewDaily:viewJournal;return v?dayKey(v.y,v.m,v.d):keyOfDate(new Date());},reauthorize:()=>reauthenticateWithPopup(auth.currentUser,provider)});
+let exerciseRecords=[];
+const routineJournal=installRoutineJournal({auth,onChange:records=>{exerciseRecords=records;renderSched();renderWeekly();},getDate:id=>{const v=id==='dailyEmpty'?viewDaily:viewJournal;return v?dayKey(v.y,v.m,v.d):keyOfDate(new Date());},reauthorize:()=>reauthenticateWithPopup(auth.currentUser,provider)});
 for(const id of ['dailySchedule','weeklySchedule','monthGrid']){const host=document.createElement('div');host.className='schedule-tag-filter';document.getElementById(id).before(host);}
 function renderTagFilters(){document.querySelectorAll('.schedule-tag-filter').forEach(host=>notebook.filterUI(host));}
 const previousBuildAll=buildAll;buildAll=function(){previousBuildAll();renderTagFilters();};

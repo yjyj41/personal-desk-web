@@ -20,6 +20,16 @@ export function blockSide(list,block) {
   const kind=scheduleKind(block);
   return list.some(other=>other!==block&&scheduleKind(other)!==kind&&other.s<=block.e&&block.s<=other.e)?kind:'full';
 }
+// Exercise records from Routine shown as read-only “done” blocks. Records without a start time,
+// or starting before 06:00, are left out. Short sessions still take one 30-minute slot.
+export function exerciseBlocks(records,key) {
+  return (records||[]).filter(r=>r.date===key&&/^\d{1,2}:\d{2}$/.test(r.time||'')).map(r=>{
+    const [h,m]=r.time.split(':').map(Number),start=(h-6)*2+Math.floor(m/30);
+    if(start<0||start>=SLOT_COUNT)return null;
+    const length=Math.max(1,Math.ceil(((Number(r.minutes)||30)+m%30)/30));
+    return {id:'ex-'+r.id,s:start,e:Math.min(SLOT_COUNT-1,start+length-1),text:r.text,time:r.time,minutes:Number(r.minutes)||0};
+  }).filter(Boolean);
+}
 export function slotTime(slot) {
   const minutes=360+slot*30;
   return String(Math.floor(minutes/60)).padStart(2,'0')+':'+String(minutes%60).padStart(2,'0');
@@ -49,7 +59,7 @@ export function autoColor(text){
   return null;
 }
 
-export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,onDelete,onGoogle,compact=false,onDay}) {
+export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,onDelete,onGoogle,compact=false,onDay,extras,onExtra}) {
   host.textContent='';
   const grid=document.createElement('div');grid.className='schedule-grid'+(compact?' weekly-grid':'');
   grid.style.setProperty('--day-count',String(dates.length));
@@ -130,6 +140,15 @@ export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,on
           });card.append(grip);
         }
         lane.append(card);
+      }
+      // Exercise from Routine: green, read-only, opens the exercise log.
+      if(extras&&laneKind!=='plan')for(const ex of extras(key)){
+        const card=document.createElement('div');card.className='schedule-block color-1 kind-actual side-full is-exercise';
+        card.style.top=ex.s*SLOT_HEIGHT+'px';card.style.height=(ex.e-ex.s+1)*SLOT_HEIGHT-2+'px';
+        const open=document.createElement('button');open.type='button';open.className='schedule-block-edit';
+        open.title='운동로그 · '+ex.time+(ex.minutes?' · '+ex.minutes+'분':'')+' · '+ex.text;open.setAttribute('aria-label',key+' '+open.title+' 운동로그에서 보기');
+        const time=document.createElement('small');time.textContent='운동 · '+ex.time;const text=document.createElement('span');text.textContent=ex.text;
+        open.append(time,text);open.onclick=()=>onExtra?.(key,ex);card.append(open);lane.append(card);
       }
       day.append(lane);
     }
