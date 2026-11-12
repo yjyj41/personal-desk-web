@@ -241,3 +241,13 @@ test('category tags: seed once, guess from text, colour from the first one', asy
   const blocks=[{text:'수영',color:2},{text:'ECT',tags:['cat-culture'],color:4},{text:'??',color:3}];
   assert.equal(classifyBlocks(blocks),1);assert.deepEqual(blocks[0].tags,['cat-exercise']);assert.equal(blocks[0].color,1);assert.equal(blocks[1].color,4);
 });
+
+test('recolorAll gives old blocks a category and the colour that goes with it', async () => {
+  const {recolorAll,seedCategories}=await import('../schedule.mjs');
+  const data={tags:{},sched:{'2026-11-02':[{id:'a',s:0,e:1,text:'수영',color:2},{id:'b',s:2,e:3,text:'Lunch',tags:['cat-work'],color:3},{id:'c',s:4,e:5,text:'??',color:4}]}};
+  seedCategories(data);
+  assert.equal(recolorAll(data),2);
+  const [a,b,c]=data.sched['2026-11-02'];
+  assert.deepEqual([a.tags,a.color],[['cat-exercise'],1]);assert.deepEqual([b.tags,b.color],[['cat-work'],2]);assert.equal(c.color,4);
+  assert.equal(recolorAll(data),0);
+});

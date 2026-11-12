@@ -55,6 +55,8 @@ export const CATEGORIES=[
   {id:'cat-life',name:'생활',color:7,words:['장보기','grocery','청소','빨래','cleaning','병원','hospital','doctor','치과','dentist','은행','bank','이사','쇼핑','shopping','택배','미용실','haircut','집안일']}
 ];
 export const CATEGORY_BY_ID=Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
+// A few example words shown under each category in the editor.
+export const CATEGORY_HINTS={'cat-work':'ECT · 회의 · 퇴근','cat-exercise':'수영 · 러닝 · 산책','cat-date':'Yini · 데이트','cat-culture':'공연 · 전시 · 여행','cat-people':'친구 · 생일 · 통화','cat-meal':'점심 · 요리 · 커피','cat-study':'강의 · 독서 · 영어','cat-life':'장보기 · 병원 · 청소'};
 const escapeRule=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
 // Every category the text points to, in priority order.
 export function guessCategories(text){
@@ -176,4 +178,16 @@ export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,on
     grid.append(day);
   }
   host.append(grid);
+}
+// One pass over every block: give a category to the ones without (when the text says), then
+// set each block's colour from its first category. Returns how many blocks changed.
+export function recolorAll(data){
+  let n=0;
+  for(const list of Object.values(data.sched||{}))for(const b of list){
+    const before=JSON.stringify([b.tags,b.color]);
+    if(!(b.tags||[]).some(id=>CATEGORY_BY_ID[id])){const g=guessCategories(b.text).find(id=>data.tags?.[id]);if(g)b.tags=[...(b.tags||[]),g];}
+    const c=categoryColor(b.tags);if(c!==null)b.color=c;
+    if(JSON.stringify([b.tags,b.color])!==before)n++;
+  }
+  return n;
 }

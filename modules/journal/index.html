@@ -249,10 +249,10 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261112b">
-<link rel="stylesheet" href="./redesign.css?v=20261112b">
+<link rel="stylesheet" href="./desk.css?v=20261112c">
+<link rel="stylesheet" href="./redesign.css?v=20261112c">
 <link rel="stylesheet" href="./notebook.css?v=20261104">
-<link rel="stylesheet" href="./grid.css?v=20261112b">
+<link rel="stylesheet" href="./grid.css?v=20261112c">
 </head>
 <body>
 <div class="book">
@@ -385,26 +385,26 @@ Synced to your account ·
 <label class="schedule-field">Google 대상 캘린더<select id="scheduleCalendar"></select></label><div id="scheduleTags" class="tag-picks"></div><p id="scheduleLinkState" class="hint"></p><button id="scheduleGoogleDelete" type="button" class="reset">Google 원본도 삭제</button><p id="scheduleError" class="load-error" hidden></p><div class="dialog-actions"><button type="button" class="reset" id="scheduleDelete">Delete</button><button type="button" class="authbtn" id="scheduleCancel">Cancel</button><button type="submit" class="authbtn">Save</button></div>
 </form></dialog>
 <div id="printArea"></div>
-<dialog id="dayDialog" aria-labelledby="dayDialogTitle"><div class="dd-head"><div><p class="dd-kicker" id="dayDialogKicker"></p><h2 id="dayDialogTitle"></h2></div><button type="button" class="dd-close" id="dayDialogClose" aria-label="Close">×</button></div><div id="dayDialogBody"></div><div class="dialog-actions"><button type="button" class="reset" id="dayDialogJournal">Open journal</button><button type="button" class="authbtn" id="dayDialogOpen">Open this day</button></div></dialog>
+<dialog id="dayDialog" aria-labelledby="dayDialogTitle"><div class="dd-head"><div><p class="dd-kicker" id="dayDialogKicker"></p><h2 id="dayDialogTitle"></h2></div><button type="button" class="dd-close" id="dayDialogClose" aria-label="Close">×</button></div><div id="dayDialogBody"></div><div class="dialog-actions"><button type="button" class="reset" id="dayDialogJournal">Open journal</button><button type="button" class="reset" id="dayDialogWeek">Weekly에서 보기</button><button type="button" class="authbtn" id="dayDialogOpen">Open this day</button></div></dialog>
 <div id="lightbox"><img alt="사진"></div>
 <input type="file" id="timelineInput" accept="application/json,.json" hidden>
 <script type="module">
 import {installNotebook} from './notebook-ui.mjs';
 import {allNotes,visibleByTags} from './notebook.mjs';
 import {installRoutineJournal} from '../../shared/routine-journal.mjs';
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261112b';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261112c';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261112b';
-import {createJournalSync} from './journal-sync.mjs?v=20261112b';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261112b';
-import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261112b';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor,exerciseBlocks,CATEGORIES,CATEGORY_BY_ID,guessCategories,categoryColor,seedCategories,classifyBlocks} from './schedule.mjs?v=20261112b';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261112b';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261112c';
+import {createJournalSync} from './journal-sync.mjs?v=20261112c';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261112c';
+import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261112c';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor,exerciseBlocks,CATEGORIES,CATEGORY_BY_ID,guessCategories,categoryColor,seedCategories,classifyBlocks,CATEGORY_HINTS,recolorAll} from './schedule.mjs?v=20261112c';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261112c';
 import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
-import {installFrame} from '../../shared/frame.mjs?v=20261112b';
+import {installFrame} from '../../shared/frame.mjs?v=20261112c';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -694,7 +694,10 @@ function dayLines(y,m,d){
   const k=dayKey(y,m,d),lines=[];
   const one=db.cal2['c'+y+'-'+m+'-'+d]; if(one&&visibleByTags(db,[])) lines.push({text:one,kind:'line'});
   for(const it of db.days[k]||[]) if(it.type==='event'&&visibleByTags(db,[])) lines.push({text:'○ '+it.text,kind:'event',done:it.status==='done'});
-  for(const bk of (db.sched[k]||[]).slice().sort((a,b)=>a.s-b.s)) if(visibleByTags(db,bk.tags)&&(scheduleKind(bk)==='plan'||bk.gc)) lines.push({text:slotTime(bk.s)+' '+(bk.text||''),kind:bk.gc?'google':'plan'});
+  // Same blocks as Weekly and Today, in their colours: plans dashed, done filled, exercise in green.
+  const blocks=(db.sched[k]||[]).filter(bk=>visibleByTags(db,bk.tags)).map(bk=>({s:bk.s,text:slotTime(bk.s)+' '+(bk.text||''),kind:'blk '+(scheduleKind(bk)==='plan'?'plan':'actual')+' color-'+((bk.color||0)%8)}));
+  for(const ex of exerciseBlocks(exerciseRecords,k))blocks.push({s:ex.s,text:ex.time+' '+ex.text,kind:'blk actual color-1'});
+  for(const b of blocks.sort((a,b)=>a.s-b.s))lines.push({text:b.text,kind:b.kind});
   for(const ev of googleEventsOn(k)) lines.push({text:(ev.start?.dateTime?hhmm(ev.start.dateTime)+' ':'')+(ev.summary||'(제목 없음)'),kind:ev.start?.date?'gday':'gtime',color:ev._cal?.color});
   return lines;
 }
@@ -709,7 +712,10 @@ function buildMonthGrid(){
   let total=0, photoDays=0;
   for(let start=1-lead; start<=days; start+=7){
     const row=document.createElement('div'); row.className='mg-row'; row.setAttribute('role','row');
-    const wk=document.createElement('span'); wk.className='mg-wk'; wk.textContent='W'+isoWeekOf(new Date(y,m,Math.max(1,Math.min(days,start+3)))); row.append(wk);
+    // Week label opens that week in Weekly.
+    const weekDay=new Date(y,m,Math.max(1,Math.min(days,start+3)));
+    const wk=document.createElement('button'); wk.type='button'; wk.className='mg-wk'; wk.textContent='W'+isoWeekOf(weekDay); wk.title='Weekly에서 보기'; wk.setAttribute('aria-label','W'+isoWeekOf(weekDay)+' Weekly에서 보기');
+    wk.onclick=()=>{viewWeek=weekDay;document.querySelector('[data-p="weekly"]').click();renderWeekly();}; row.append(wk);
     for(let i=0;i<7;i++){
       const d=start+i;
       if(d<1||d>days){const empty=document.createElement('span');empty.className='mg-cell empty';empty.setAttribute('role','gridcell');row.append(empty);continue;}
@@ -719,6 +725,7 @@ function buildMonthGrid(){
       if(y===Y&&m===M&&d===D) cell.classList.add('today');
       cell.setAttribute('aria-label',(m+1)+'/'+d+(lines.length?' — '+lines.map(l=>l.text).join(', '):'')+(photos.length?' · 사진 '+photos.length+'장':'')+' · 자세히 보기');
       const num=document.createElement('span'); num.className='mg-num'; num.textContent=d; cell.append(num);
+      if(allNotes(db).some(n=>n.date===k)){const j=document.createElement('span');j.className='mg-journal';j.textContent='일기';cell.append(j);}
       const list=document.createElement('span'); list.className='mg-lines';
       lines.slice(0,3).forEach(l=>{const t=document.createElement('span');t.className='mg-line '+l.kind+(l.done?' done':'');t.textContent=l.text;if(l.color)t.style.setProperty('--gc',l.color);list.append(t);});
       if(lines.length>3){const more=document.createElement('span');more.className='mg-more';more.textContent='+'+(lines.length-3);list.append(more);}
@@ -762,6 +769,7 @@ function openDayDetail(y,m,d){
   if(empty){const p=document.createElement('p');p.className='dd-empty';p.textContent='Nothing recorded on this day yet.';body.append(p);}
   document.getElementById('dayDialogOpen').onclick=()=>{dlg.close();selectDay(date);document.querySelector('[data-p="daily"]').click();};
   document.getElementById('dayDialogJournal').onclick=()=>{dlg.close();selectJournalDate(date);document.querySelector('[data-p="journal"]').click();};
+  document.getElementById('dayDialogWeek').onclick=()=>{dlg.close();viewWeek=date;document.querySelector('[data-p="weekly"]').click();renderWeekly();};
   dlg.showModal();
 }
 document.getElementById('dayDialogClose').onclick=()=>document.getElementById('dayDialog').close();
@@ -1221,18 +1229,29 @@ document.getElementById('scheduleForm').onsubmit=async event=>{
   document.getElementById('scheduleDialog').close();scheduleEditing=null;
 };
 // Category chips: tick what fits. The first ticked category sets the colour.
+// Same order everywhere: editor tiles and the Weekly bar.
+const CATEGORY_ORDER=['cat-work','cat-exercise','cat-date','cat-culture','cat-people','cat-meal','cat-study','cat-life'];
+function el(tag,cls,text){const n=document.createElement(tag);if(cls)n.className=cls;if(text!=null)n.textContent=text;return n;}
 function renderCategoryPicker(){
   const host=document.getElementById('scheduleTags');host.replaceChildren();
-  const head=document.createElement('p');head.className='cat-head';head.textContent='분류 (해당되는 것에 틱)';host.append(head);
-  const all=Object.entries(db.tags||{}),cats=CATEGORIES.filter(c=>db.tags?.[c.id]).map(c=>[c.id,db.tags[c.id].name,c.color]),others=all.filter(([id])=>!CATEGORY_BY_ID[id]).map(([id,t])=>[id,t.name,null]);
-  for(const [id,name,color] of [...cats,...others]){
-    const label=document.createElement('label');label.className='cat-chip'+(color!==null?' color-'+color:' plain');
-    const box=document.createElement('input');box.type='checkbox';box.checked=scheduleEditing.tags.includes(id);
-    box.onchange=()=>{const t=scheduleEditing.tags;scheduleEditing.tags=box.checked?[...t,id]:t.filter(x=>x!==id);scheduleEditing.tagsPicked=true;
-      const c=categoryColor(scheduleEditing.tags);if(c!==null&&!scheduleEditing.colorPicked)document.getElementById('scheduleColor').value=String(c);renderCategoryPicker();};
-    label.append(box,document.createTextNode(name));host.append(label);
+  const toggle=(id,on)=>{const t=scheduleEditing.tags;scheduleEditing.tags=on?[...t,id]:t.filter(x=>x!==id);scheduleEditing.tagsPicked=true;
+    const c=categoryColor(scheduleEditing.tags);if(c!==null&&!scheduleEditing.colorPicked)document.getElementById('scheduleColor').value=String(c);renderCategoryPicker();};
+  const set=el('fieldset','cat-set'),legend=el('legend','cat-legend');legend.append(el('span','','분류 · 해당되는 것 모두'),el('span','cat-legend-note',scheduleEditing.tagsPicked?'':'내용 보고 미리 골라둠'));set.append(legend);
+  const grid=el('div','cat-grid'),picked=scheduleEditing.tags.filter(id=>CATEGORY_BY_ID[id]);
+  for(const id of CATEGORY_ORDER.filter(id=>db.tags?.[id])){
+    const c=CATEGORY_BY_ID[id],order=picked.indexOf(id)+1,label=el('label','cat-tile color-'+c.color+(order?' on':''));
+    const box=el('input');box.type='checkbox';box.checked=!!order;box.onchange=()=>toggle(id,box.checked);
+    const words=el('span','cat-words');words.append(el('strong','',db.tags[id].name),el('small','',CATEGORY_HINTS[id]||''));
+    const mark=el('span','cat-mark',order?String(order):'');mark.setAttribute('aria-hidden','true');
+    label.append(box,el('span','cat-swatch'),words,mark);grid.append(label);
   }
-  if(!all.length){const p=document.createElement('p');p.className='hint';p.textContent='태그가 없어요. 설정의 태그 관리에서 만들 수 있어요.';host.append(p);}
+  set.append(grid);
+  if(picked.length){const first=CATEGORY_BY_ID[picked[0]],note=el('p','cat-note color-'+first.color);note.append(el('span','cat-swatch'),document.createTextNode('색은 1번 · '+db.tags[picked[0]].name+'을(를) 따라가요. 순서는 누른 순서예요.'));set.append(note);}
+  host.append(set);
+  const mine=Object.entries(db.tags||{}).filter(([id])=>!CATEGORY_BY_ID[id]),own=el('div','cat-own');own.append(el('span','cat-own-head','내 태그'));
+  const row=el('div','cat-own-row');
+  for(const [id,t] of mine){const label=el('label','cat-pill'),box=el('input');box.type='checkbox';box.checked=scheduleEditing.tags.includes(id);box.onchange=()=>toggle(id,box.checked);label.append(box,document.createTextNode(t.name));row.append(label);}
+  const add=el('button','cat-add','+ 태그 관리');add.type='button';add.onclick=()=>notebook.manage();row.append(add);own.append(row);host.append(own);
 }
 document.getElementById('scheduleText').addEventListener('input',()=>{if(!scheduleEditing)return;const text=document.getElementById('scheduleText').value;
   // Until you tick something yourself, the category follows what you type.
@@ -1374,11 +1393,39 @@ const calendar=installCalendar({
 
 const notebook=installNotebook({getData:()=>db,ready:()=>!!uid&&!!sync?.isReady()&&!sync?.getConflict(),save,getDate:()=>viewJournal?dayKey(viewJournal.y,viewJournal.m,viewJournal.d):keyOfDate(new Date()),onDate:key=>selectJournalDate(new Date(key+'T12:00:00')),refresh:()=>refreshSchedules()});
 let exerciseRecords=[];
-const routineJournal=installRoutineJournal({auth,onChange:records=>{exerciseRecords=records;renderSched();renderWeekly();},getDate:id=>{const v=id==='dailyEmpty'?viewDaily:viewJournal;return v?dayKey(v.y,v.m,v.d):keyOfDate(new Date());},reauthorize:()=>reauthenticateWithPopup(auth.currentUser,provider)});
-for(const id of ['dailySchedule','weeklySchedule','monthGrid']){const host=document.createElement('div');host.className='schedule-tag-filter';document.getElementById(id).before(host);}
-function renderTagFilters(){document.querySelectorAll('.schedule-tag-filter').forEach(host=>notebook.filterUI(host));}
-// Category tags appear everywhere (filter, tag manager, editor) once your notebook has loaded.
-const previousBuildAll=buildAll;buildAll=function(){if(uid&&sync?.isReady()&&seedCategories(db))save();previousBuildAll();renderTagFilters();};
+const routineJournal=installRoutineJournal({auth,onChange:records=>{exerciseRecords=records;renderSched();renderWeekly();buildMonthGrid();},getDate:id=>{const v=id==='dailyEmpty'?viewDaily:viewJournal;return v?dayKey(v.y,v.m,v.d):keyOfDate(new Date());},reauthorize:()=>reauthenticateWithPopup(auth.currentUser,provider)});
+for(const id of ['dailySchedule','weeklySchedule','monthGrid']){const host=document.createElement('div');host.className='schedule-tag-filter';host.dataset.for=id;document.getElementById(id).before(host);}
+// Category bar: one pill per tag with how many blocks it has in view. Tap hides or shows it.
+function filterKeys(id){
+  if(id==='weeklySchedule')return viewWeek?weekDates(viewWeek).map(keyOfDate):[];
+  if(id==='dailySchedule')return viewDaily?[dayKey(viewDaily.y,viewDaily.m,viewDaily.d)]:[];
+  if(!viewMonth)return [];const n=new Date(viewMonth.y,viewMonth.m+1,0).getDate();return Array.from({length:n},(_,i)=>dayKey(viewMonth.y,viewMonth.m,i+1));
+}
+function renderTagFilters(){
+  document.querySelectorAll('.schedule-tag-filter').forEach(host=>{
+    host.replaceChildren();if(!uid)return;
+    const view=db.tagView||{hidden:[],hideUntagged:false},hidden=new Set(view.hidden),blocks=filterKeys(host.dataset.for).flatMap(k=>db.sched[k]||[]);
+    const count=id=>blocks.filter(b=>id?(b.tags||[]).includes(id):!(b.tags||[]).length).length;
+    const bar=el('div','cat-bar');bar.setAttribute('role','group');bar.setAttribute('aria-label','분류별로 보기');
+    const change=fn=>{const next=db.tagView||={hidden:[],hideUntagged:false};fn(next);save();refreshSchedules();};
+    const all=el('button','cat-all','전체 보기');all.type='button';all.setAttribute('aria-pressed',String(!hidden.size&&!view.hideUntagged));all.onclick=()=>change(v=>{v.hidden=[];v.hideUntagged=false;});bar.append(all);
+    const ids=[...CATEGORY_ORDER.filter(id=>db.tags?.[id]),...Object.keys(db.tags||{}).filter(id=>!CATEGORY_BY_ID[id])];
+    const pill=(id,name,color,on,toggle)=>{const b=el('button','cat-filter '+(color!=null?'color-'+color:'plain')+(on?'':' off'));b.type='button';b.setAttribute('aria-pressed',String(on));b.append(el('span','cat-swatch'),document.createTextNode(name),el('span','cat-count',String(count(id))));b.onclick=toggle;bar.append(b);};
+    for(const id of ids){const on=!hidden.has(id);pill(id,db.tags[id].name,CATEGORY_BY_ID[id]?.color,on,()=>change(v=>{v.hidden=on?[...new Set([...v.hidden,id])]:v.hidden.filter(x=>x!==id);}));}
+    pill('', '분류 없음',null,!view.hideUntagged,()=>change(v=>{v.hideUntagged=!v.hideUntagged;}));
+    const manage=el('button','cat-add','태그 관리');manage.type='button';manage.onclick=()=>notebook.manage();bar.append(manage);
+    host.append(bar);
+  });
+}
+// Category tags appear everywhere once your notebook has loaded. The first time, every existing
+// block also gets a category from its text and the colour of its category (with Undo).
+const previousBuildAll=buildAll;buildAll=function(){
+  const ready=uid&&sync?.isReady();if(ready&&seedCategories(db))save();
+  previousBuildAll();renderTagFilters();
+  if(ready&&(db.tagPresets||0)<2)setTimeout(()=>{if((db.tagPresets||0)>=2)return;const probe=clone(db),n=recolorAll(probe);
+    if(!n){db.tagPresets=2;save();return;}
+    changeWithUndo('기존 일정 '+n+'개를 분류하고 색을 맞췄어요.',()=>{recolorAll(db);db.tagPresets=2;});},0);
+};
 window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==parent||event.data?.channel!=='personal-desk')return;if(event.data.type==='manage-tags')notebook.manage();if(event.data.type==='calendar-settings')setTimeout(()=>calendar.open(),300);});
 let deskContext=null;let applyingDeskContext=false;
 function applyDeskContext(ctx){
