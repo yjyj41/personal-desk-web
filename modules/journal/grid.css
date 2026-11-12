@@ -122,6 +122,18 @@ html body .schedule-block.color-1{--c:#82A890;--t:#EEF4F0;--d:#D2E4D8;--x:#30533
 html body .schedule-block.color-2{--c:#7F98DA;--t:#F0F3FB;--d:#D6DFF5;--x:#2E437F}
 html body .schedule-block.color-3{--c:#C9A47A;--t:#FAF3EA;--d:#EDDCC5;--x:#664627}
 html body .schedule-block.color-4{--c:#A890C9;--t:#F4F0F9;--d:#E2D8EF;--x:#4E3A6E}
+html body .schedule-block.color-5{--c:#6FA8A3;--t:#EDF5F4;--d:#CFE5E2;--x:#235450}
+html body .schedule-block.color-6{--c:#8D97A6;--t:#F2F3F5;--d:#DADEE5;--x:#3A4350}
+html body .schedule-block.color-7{--c:#B9A88A;--t:#F7F4EE;--d:#E7DFCF;--x:#594B32}
+/* Category chips in the block editor: soft colour, filled when ticked. */
+.cat-chip.color-0{--c:#D08A78;--d:#F1D6CD;--x:#73372A}.cat-chip.color-1{--c:#82A890;--d:#D2E4D8;--x:#30533F}.cat-chip.color-2{--c:#7F98DA;--d:#D6DFF5;--x:#2E437F}.cat-chip.color-3{--c:#C9A47A;--d:#EDDCC5;--x:#664627}
+.cat-chip.color-4{--c:#A890C9;--d:#E2D8EF;--x:#4E3A6E}.cat-chip.color-5{--c:#6FA8A3;--d:#CFE5E2;--x:#235450}.cat-chip.color-6{--c:#8D97A6;--d:#DADEE5;--x:#3A4350}.cat-chip.color-7{--c:#B9A88A;--d:#E7DFCF;--x:#594B32}
+.cat-chip.plain{--c:#B8B6AE;--d:#ECEBE6;--x:#3A3936}
+html body #scheduleTags{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+html body #scheduleTags .cat-head{flex-basis:100%;margin:0;font:500 11px var(--mono);color:var(--ink-soft)}
+html body #scheduleTags label.cat-chip{display:inline-flex;align-items:center;gap:5px;min-height:34px;padding:4px 12px 4px 8px!important;border:1px solid var(--c)!important;border-left:4px solid var(--c)!important;border-radius:3px!important;font:500 13px var(--sans)!important;color:var(--x);background:#fff;cursor:pointer}
+html body #scheduleTags label.cat-chip:has(input:checked){background:var(--d)}
+html body #scheduleTags label.cat-chip input{accent-color:var(--x);margin:0}
 /* Plan = pale tint with a dashed edge; done = a soft fill with a solid bar. Text stays dark on both. */
 html body .schedule-lane .schedule-block.kind-plan{background:var(--t)!important;border:1px dashed var(--c)!important;border-left:3px solid var(--c)!important;border-radius:3px!important}
 html body .schedule-lane .schedule-block.kind-actual{background:var(--d)!important;border:0!important;border-left:3px solid var(--c)!important;border-radius:3px!important}

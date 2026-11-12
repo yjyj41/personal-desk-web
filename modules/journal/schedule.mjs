@@ -41,22 +41,43 @@ export function saveSchedule(data,key,block) {
 }
 
 // Both surfaces read the same dated records; the renderer never owns a second copy.
-// Colour from what the block says. First matching group wins; null = no guess, keep the colour.
-// Colours: 0 Red, 1 Green, 2 Blue, 3 Ochre, 4 Purple.
-export const COLOR_RULES=[
-  {color:4,name:'문화·여가',words:['공연','콘서트','concert','전시','exhibition','museum','미술관','박물관','gallery','영화','movie','cinema','뮤지컬','musical','theatre','theater','연극','오페라','opera','ballet','발레','barbican','piano','symphony','orchestra','sinfonia','recital','festival','페스티벌','독서','book','photo','사진','여행','trip','travel','티켓','ticket','flight','비행']},
-  {color:1,name:'운동',words:['운동','수영','swim','swimming','러닝','running','run','달리기','gym','헬스','요가','yoga','pilates','필라테스','산책','walk','등산','hike','hiking','krc','tennis','테니스','축구','football','climbing','클라이밍','bike','자전거','workout','스트레칭']},
-  {color:3,name:'식사',words:['점심','저녁','아침','lunch','dinner','breakfast','brunch','브런치','요리','cook','cooking','식사','meal','coffee','커피','카페','cafe','음식','food','restaurant','레스토랑','도시락','맛집','장보기','grocery']},
-  {color:2,name:'일',words:['업무','work','회의','meeting','출근','퇴근','ect','project','프로젝트','report','보고서','deadline','마감','email','이메일','cad','설계','공부','study']},
-  {color:0,name:'약속·사람',words:['약속','친구','만남','date','데이트','party','파티','생일','birthday','모임','가족','family','통화']}
+// Category tags: ready-made tags you tick on a block. Each one owns a colour; the block takes the
+// colour of its first category. The list order is also the guessing priority for the text.
+// Colours: 0 Rose, 1 Green, 2 Blue, 3 Ochre, 4 Purple, 5 Teal, 6 Slate, 7 Sand.
+export const CATEGORIES=[
+  {id:'cat-culture',name:'문화·여가',color:4,words:['공연','콘서트','concert','전시','exhibition','museum','미술관','박물관','gallery','영화','movie','cinema','뮤지컬','musical','theatre','theater','연극','오페라','opera','ballet','발레','barbican','piano','symphony','orchestra','sinfonia','recital','festival','페스티벌','photo','사진','여행','trip','travel','티켓','ticket','flight','비행']},
+  {id:'cat-exercise',name:'운동',color:1,words:['운동','수영','swim','swimming','러닝','running','run','달리기','gym','헬스','요가','yoga','pilates','필라테스','산책','walk','등산','hike','hiking','krc','tennis','테니스','축구','football','climbing','클라이밍','bike','자전거','workout','스트레칭','상체','하체']},
+  {id:'cat-date',name:'데이트',color:0,words:['데이트','date','yini']},
+  {id:'cat-people',name:'친구·가족',color:5,words:['약속','친구','만남','party','파티','생일','birthday','모임','가족','family','통화','엄마','아빠']},
+  {id:'cat-meal',name:'식사',color:3,words:['점심','저녁','아침','lunch','dinner','breakfast','brunch','브런치','요리','cook','cooking','식사','meal','coffee','커피','카페','cafe','음식','food','restaurant','레스토랑','도시락','맛집']},
+  {id:'cat-study',name:'공부',color:6,words:['공부','study','강의','lecture','course','수업','독서','book','영어','english','시험','exam','자격증']},
+  {id:'cat-work',name:'일',color:2,words:['업무','work','회의','meeting','출근','퇴근','ect','project','프로젝트','report','보고서','deadline','마감','email','이메일','cad','설계']},
+  {id:'cat-life',name:'생활',color:7,words:['장보기','grocery','청소','빨래','cleaning','병원','hospital','doctor','치과','dentist','은행','bank','이사','쇼핑','shopping','택배','미용실','haircut','집안일']}
 ];
+export const CATEGORY_BY_ID=Object.fromEntries(CATEGORIES.map(c=>[c.id,c]));
 const escapeRule=w=>w.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-export function autoColor(text){
+// Every category the text points to, in priority order.
+export function guessCategories(text){
   const t=String(text||'').toLowerCase();
   // Latin words match whole words (so “ect” is not found in “connect”); Korean matches anywhere.
   const hit=w=>/^[a-z0-9 ]+$/.test(w)?new RegExp('(^|[^a-z0-9])'+escapeRule(w)+'($|[^a-z0-9])').test(t):t.includes(w);
-  for(const rule of COLOR_RULES)if(rule.words.some(hit))return rule.color;
-  return null;
+  return CATEGORIES.filter(c=>c.words.some(hit)).map(c=>c.id);
+}
+export function autoColor(text){const first=guessCategories(text)[0];return first?CATEGORY_BY_ID[first].color:null;}
+// Colour of a block from its tags: the first category tag wins; otherwise null (keep its colour).
+export function categoryColor(tags){const id=(tags||[]).find(id=>CATEGORY_BY_ID[id]);return id?CATEGORY_BY_ID[id].color:null;}
+// Add the category tags once, so they appear in every picker. Deleted ones stay deleted.
+export function seedCategories(data){
+  if(data.tagPresets)return false;
+  data.tags||={};
+  for(const c of CATEGORIES)if(!data.tags[c.id]&&!Object.values(data.tags).some(t=>t.name===c.name))data.tags[c.id]={name:c.name};
+  data.tagPresets=1;return true;
+}
+// Fill in categories for blocks that have none yet. Returns how many blocks changed.
+export function classifyBlocks(blocks){
+  let n=0;
+  for(const b of blocks){if((b.tags||[]).some(id=>CATEGORY_BY_ID[id]))continue;const guess=guessCategories(b.text);if(!guess.length)continue;b.tags=[...(b.tags||[]),guess[0]];b.color=CATEGORY_BY_ID[guess[0]].color;n++;}
+  return n;
 }
 
 export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,onDelete,onGoogle,compact=false,onDay,extras,onExtra}) {
@@ -106,7 +127,7 @@ export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,on
       const blocks=scheduleItems(getData(),key,laneKind);
       for(const block of blocks){
         const kind=scheduleKind(block);
-        const card=document.createElement('div');card.className='schedule-block color-'+((block.color || 0)%5)+' kind-'+kind;
+        const card=document.createElement('div');card.className='schedule-block color-'+((block.color || 0)%8)+' kind-'+kind;
         if(laneKind==='all')card.classList.add('side-'+blockSide(blocks,block));
         card.style.top=block.s*SLOT_HEIGHT+'px';card.style.height=(block.e-block.s+1)*SLOT_HEIGHT-2+'px';
         const edit=document.createElement('button');edit.type='button';edit.className='schedule-block-edit';

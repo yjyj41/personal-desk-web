@@ -249,10 +249,10 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261111a">
-<link rel="stylesheet" href="./redesign.css?v=20261111a">
+<link rel="stylesheet" href="./desk.css?v=20261112a">
+<link rel="stylesheet" href="./redesign.css?v=20261112a">
 <link rel="stylesheet" href="./notebook.css?v=20261104">
-<link rel="stylesheet" href="./grid.css?v=20261111a">
+<link rel="stylesheet" href="./grid.css?v=20261112a">
 </head>
 <body>
 <div class="book">
@@ -311,7 +311,7 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 </section>
 <section class="panel" id="weekly">
 <div class="weekly-nav"><div class="ph" id="weeklyTitle">Weekly</div><button class="navbtn" id="weekPrev" aria-label="Previous week">‹</button><input type="date" id="weekPicker" aria-label="Date in selected week"><button class="navbtn" id="weekNext" aria-label="Next week">›</button><button class="navbtn" id="weekToday">This week</button></div>
-<p class="hint week-hint">Monday to Sunday. Plans are light, done is filled. Select a date to open its daily log. <button type="button" class="navbtn" id="weekAutoColor">내용으로 색 칠하기</button></p>
+<p class="hint week-hint">Monday to Sunday. Plans are light, done is filled. Select a date to open its daily log. <button type="button" class="navbtn" id="weekAutoColor">내용으로 분류하기</button></p>
 <div class="schedule-scroll" id="weeklySchedule" tabindex="0" aria-label="주간 시간표, 좁은 화면에서는 가로로 스크롤"></div>
 </section>
 <section class="panel" id="monthly">
@@ -381,7 +381,7 @@ Synced to your account ·
 <label class="hint"><input type="checkbox" id="scheduleGoogle"> Google에도 저장</label><p class="hint">켜면 이 블록만 Google 캘린더에 올라가고 양쪽 수정이 맞춰져요. 꺼도 양쪽 일정은 남아요.</p>
 <label class="schedule-field">Details<textarea id="scheduleText" rows="3" placeholder="What are you planning? What happened?"></textarea></label>
 <div class="schedule-times"><label class="schedule-field">Start<select id="scheduleStart"></select></label><label class="schedule-field">End<select id="scheduleEnd"></select></label></div>
-<label class="schedule-field">Colour <small class="hint" id="scheduleColorAuto">내용을 쓰면 색이 자동으로 정해져요. 직접 고르면 그대로 둬요.</small><select id="scheduleColor"><option value="0">Red · 약속·사람</option><option value="1">Green · 운동</option><option value="2">Blue · 일</option><option value="3">Ochre · 식사</option><option value="4">Purple · 문화·여가</option></select></label>
+<label class="schedule-field">Colour <small class="hint" id="scheduleColorAuto">분류를 틱하면 그 색으로 정해져요. 직접 고르면 그대로 둬요.</small><select id="scheduleColor"><option value="0">Rose · 데이트</option><option value="1">Green · 운동</option><option value="2">Blue · 일</option><option value="3">Ochre · 식사</option><option value="4">Purple · 문화·여가</option><option value="5">Teal · 친구·가족</option><option value="6">Slate · 공부</option><option value="7">Sand · 생활</option></select></label>
 <label class="schedule-field">Google 대상 캘린더<select id="scheduleCalendar"></select></label><div id="scheduleTags" class="tag-picks"></div><p id="scheduleLinkState" class="hint"></p><button id="scheduleGoogleDelete" type="button" class="reset">Google 원본도 삭제</button><p id="scheduleError" class="load-error" hidden></p><div class="dialog-actions"><button type="button" class="reset" id="scheduleDelete">Delete</button><button type="button" class="authbtn" id="scheduleCancel">Cancel</button><button type="submit" class="authbtn">Save</button></div>
 </form></dialog>
 <div id="printArea"></div>
@@ -392,19 +392,19 @@ Synced to your account ·
 import {installNotebook} from './notebook-ui.mjs';
 import {allNotes,visibleByTags} from './notebook.mjs';
 import {installRoutineJournal} from '../../shared/routine-journal.mjs';
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261111a';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261112a';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261111a';
-import {createJournalSync} from './journal-sync.mjs?v=20261111a';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261111a';
-import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261111a';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor,exerciseBlocks} from './schedule.mjs?v=20261111a';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261111a';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261112a';
+import {createJournalSync} from './journal-sync.mjs?v=20261112a';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261112a';
+import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261112a';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor,exerciseBlocks,CATEGORIES,CATEGORY_BY_ID,guessCategories,categoryColor,seedCategories,classifyBlocks} from './schedule.mjs?v=20261112a';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261112a';
 import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
-import {installFrame} from '../../shared/frame.mjs?v=20261111a';
+import {installFrame} from '../../shared/frame.mjs?v=20261112a';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1183,13 +1183,16 @@ function openScheduleEditor(key,block){
   document.getElementById('scheduleGoogle').checked=block.id?!!block.google:(scheduleKind(block)==='plan'&&calendar.defaultSend());
   document.getElementById('scheduleText').value=block.text;
   const target=document.getElementById('scheduleCalendar');target.replaceChildren(new Option('설정의 기본 캘린더',''));for(const c of calendar.writableCalendars())target.add(new Option(c.summary,c.id));if(block.gc&&!Array.from(target.options).some(o=>o.value===block.gc.calendar))target.add(new Option(block.gc.calendar,block.gc.calendar));target.value=block.gc?.calendar||block.googleCalendar||'';target.disabled=!!block.gc;
-  scheduleEditing.tags=[...(block.tags||[])];notebook.picker(document.getElementById('scheduleTags'),scheduleEditing.tags,tags=>scheduleEditing.tags=tags);
+  if(seedCategories(db))save();
+  scheduleEditing.tags=[...(block.tags||[])];scheduleEditing.tagsPicked=scheduleEditing.tags.some(id=>CATEGORY_BY_ID[id]);
+  if(!block.id&&!scheduleEditing.tagsPicked){const guess=guessCategories(block.text)[0];if(guess&&db.tags?.[guess])scheduleEditing.tags.push(guess);}
+  renderCategoryPicker();
   document.getElementById('scheduleLinkState').textContent=block.google&&block.gc?'Google 연결됨 · 연결 대상: '+block.gc.calendar:block.google?(calendar.connected()?'Google 전송 대기':'Google 재연결 필요 · Desk에 저장됨'):'Desk에만 저장';
   document.getElementById('scheduleGoogleDelete').hidden=!block.google;
-  document.getElementById('scheduleColor').value=String((block.color || 0)%5);
-  // Colour follows the text until the colour is picked by hand.
+  document.getElementById('scheduleColor').value=String((block.color || 0)%8);
+  // Colour follows the category; without one it follows the text, until picked by hand.
   scheduleEditing.colorPicked=false;
-  if(!block.id){const guess=autoColor(block.text);if(guess!==null)document.getElementById('scheduleColor').value=String(guess);}
+  {const fromTags=categoryColor(scheduleEditing.tags),guess=fromTags??(block.id?null:autoColor(block.text));if(guess!==null)document.getElementById('scheduleColor').value=String(guess);}
   for(const [id,first,last,value] of [['scheduleStart',0,35,block.s],['scheduleEnd',1,36,block.e+1]]){
     const select=document.getElementById(id);select.textContent='';
     for(let slot=first;slot<=last;slot++){const option=document.createElement('option');option.value=String(slot);option.textContent=slotTime(slot);select.append(option);}select.value=String(value);
@@ -1217,14 +1220,31 @@ document.getElementById('scheduleForm').onsubmit=async event=>{
   changeWithUndo('시간별 기록을 저장했어요.',()=>saveSchedule(db,key,updated));
   document.getElementById('scheduleDialog').close();scheduleEditing=null;
 };
-document.getElementById('scheduleText').addEventListener('input',()=>{if(!scheduleEditing||scheduleEditing.colorPicked)return;const guess=autoColor(document.getElementById('scheduleText').value);if(guess!==null)document.getElementById('scheduleColor').value=String(guess);});
+// Category chips: tick what fits. The first ticked category sets the colour.
+function renderCategoryPicker(){
+  const host=document.getElementById('scheduleTags');host.replaceChildren();
+  const head=document.createElement('p');head.className='cat-head';head.textContent='분류 (해당되는 것에 틱)';host.append(head);
+  const all=Object.entries(db.tags||{}),cats=CATEGORIES.filter(c=>db.tags?.[c.id]).map(c=>[c.id,db.tags[c.id].name,c.color]),others=all.filter(([id])=>!CATEGORY_BY_ID[id]).map(([id,t])=>[id,t.name,null]);
+  for(const [id,name,color] of [...cats,...others]){
+    const label=document.createElement('label');label.className='cat-chip'+(color!==null?' color-'+color:' plain');
+    const box=document.createElement('input');box.type='checkbox';box.checked=scheduleEditing.tags.includes(id);
+    box.onchange=()=>{const t=scheduleEditing.tags;scheduleEditing.tags=box.checked?[...t,id]:t.filter(x=>x!==id);scheduleEditing.tagsPicked=true;
+      const c=categoryColor(scheduleEditing.tags);if(c!==null&&!scheduleEditing.colorPicked)document.getElementById('scheduleColor').value=String(c);renderCategoryPicker();};
+    label.append(box,document.createTextNode(name));host.append(label);
+  }
+  if(!all.length){const p=document.createElement('p');p.className='hint';p.textContent='태그가 없어요. 설정의 태그 관리에서 만들 수 있어요.';host.append(p);}
+}
+document.getElementById('scheduleText').addEventListener('input',()=>{if(!scheduleEditing)return;const text=document.getElementById('scheduleText').value;
+  // Until you tick something yourself, the category follows what you type.
+  if(!scheduleEditing.tagsPicked){const guess=guessCategories(text)[0];scheduleEditing.tags=[...scheduleEditing.tags.filter(id=>!CATEGORY_BY_ID[id]),...(guess&&db.tags?.[guess]?[guess]:[])];renderCategoryPicker();}
+  if(scheduleEditing.colorPicked)return;const guess=categoryColor(scheduleEditing.tags)??autoColor(text);if(guess!==null)document.getElementById('scheduleColor').value=String(guess);});
 document.getElementById('scheduleColor').addEventListener('change',()=>{if(scheduleEditing)scheduleEditing.colorPicked=true;});
 // Weekly: recolour this week's blocks from their text in one go (Undo restores).
 document.getElementById('weekAutoColor').onclick=()=>{
-  if(!viewWeek)return;const keys=weekDates(viewWeek).map(keyOfDate);let n=0;
-  for(const k of keys)for(const b of db.sched[k]||[]){const guess=autoColor(b.text);if(guess!==null&&guess!==(b.color||0)%5)n++;}
-  if(!n){notify('바꿀 색이 없어요. 내용으로 알 수 없는 일정은 그대로 둬요.');return;}
-  changeWithUndo('이번 주 일정 '+n+'개의 색을 내용에 맞췄어요.',()=>{for(const k of keys)for(const b of db.sched[k]||[]){const guess=autoColor(b.text);if(guess!==null)b.color=guess;}});
+  if(!viewWeek)return;if(seedCategories(db))save();const keys=weekDates(viewWeek).map(keyOfDate);
+  const n=classifyBlocks(keys.flatMap(k=>(db.sched[k]||[]).map(b=>({...b}))).filter(b=>(b.tags||[]).every(id=>!CATEGORY_BY_ID[id])).filter(b=>{const g=guessCategories(b.text)[0];return g&&db.tags?.[g];}));
+  if(!n){notify('새로 분류할 일정이 없어요. 이미 분류된 일정과 내용으로 알 수 없는 일정은 그대로 둬요.');return;}
+  changeWithUndo('이번 주 일정 '+n+'개를 내용으로 분류했어요.',()=>{for(const k of keys)classifyBlocks((db.sched[k]||[]).filter(b=>{const g=guessCategories(b.text)[0];return g&&db.tags?.[g];}));});
 };
 document.getElementById('scheduleCancel').onclick=()=>{document.getElementById('scheduleDialog').close();scheduleEditing=null;};
 document.getElementById('scheduleDelete').onclick=()=>{

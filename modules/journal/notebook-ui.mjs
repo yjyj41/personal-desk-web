@@ -62,7 +62,7 @@ export function installNotebook({getData,save,getDate,onDate,refresh,ready=()=>t
     }
     dialog.append(button('닫기',()=>dialog.close()));if(!dialog.open)dialog.showModal();
   }
-  function filterUI(host){const open=host.querySelector('details')?.open;host.replaceChildren();const details=el('details'),summary=el('summary','일정 태그 표시');details.open=!!open;details.append(summary);const view=getData().tagView||{hidden:[],hideUntagged:false};
+  function filterUI(host){const open=host.querySelector('details')?.open;host.replaceChildren();const details=el('details'),summary=el('summary','분류별로 보기');details.open=!!open;details.append(summary);const view=getData().tagView||{hidden:[],hideUntagged:false};
     for(const [id,t] of [['',{name:'태그 없음'}],...Object.entries(getData().tags||{})]){const label=el('label'),check=el('input');check.type='checkbox';check.checked=id?!view.hidden.includes(id):!view.hideUntagged;check.onchange=()=>{const next=getData().tagView||={hidden:[],hideUntagged:false};if(id)next.hidden=check.checked?next.hidden.filter(x=>x!==id):[...new Set([...next.hidden,id])];else next.hideUntagged=!check.checked;save();refresh();};label.append(check,document.createTextNode(t.name));details.append(label);}
     details.append(button('태그 관리',manage));host.append(details);
   }

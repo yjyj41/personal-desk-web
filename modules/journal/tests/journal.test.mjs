@@ -70,7 +70,7 @@ test('auto colour reads the block text: culture, exercise, food, work, people; u
   assert.equal(autoColor('Richmond Running (KRC) – New Malden 돼지고기'),1);
   assert.equal(autoColor('수영'),1);assert.equal(autoColor('Lunch'),3);assert.equal(autoColor('요리 – 도시락'),3);
   assert.equal(autoColor('ECT – Section CAD location'),2);assert.equal(autoColor('퇴근'),2);
-  assert.equal(autoColor('친구 생일 파티'),0);
+  assert.equal(autoColor('친구 생일 파티'),5);
   assert.equal(autoColor('reconnect the router'),null);assert.equal(autoColor(''),null);
 });
 test('schedule range rejects reversed times and supports midnight endpoint',()=>{
@@ -229,4 +229,15 @@ test('exercise records become read-only done blocks on their day', () => {
   ];
   assert.deepEqual(exerciseBlocks(records,'2026-11-10').map(b=>[b.id,b.s,b.e]),[['ex-a',28,28],['ex-b',2,4]]);
   assert.deepEqual(exerciseBlocks(undefined,'2026-11-10'),[]);
+});
+
+test('category tags: seed once, guess from text, colour from the first one', async () => {
+  const {seedCategories,guessCategories,categoryColor,classifyBlocks}=await import('../schedule.mjs');
+  const data={tags:{}};
+  assert.equal(seedCategories(data),true);assert.equal(data.tags['cat-work'].name,'일');
+  delete data.tags['cat-life'];assert.equal(seedCategories(data),false);assert.equal(data.tags['cat-life'],undefined);
+  assert.deepEqual(guessCategories('Yini – Barbican 공연'),['cat-culture','cat-date']);
+  assert.equal(categoryColor(['custom','cat-date','cat-culture']),0);assert.equal(categoryColor(['custom']),null);
+  const blocks=[{text:'수영',color:2},{text:'ECT',tags:['cat-culture'],color:4},{text:'??',color:3}];
+  assert.equal(classifyBlocks(blocks),1);assert.deepEqual(blocks[0].tags,['cat-exercise']);assert.equal(blocks[0].color,1);assert.equal(blocks[1].color,4);
 });
