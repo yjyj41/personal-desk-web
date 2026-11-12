@@ -249,10 +249,10 @@ dialog{margin:auto;width:min(520px,calc(100% - 32px));max-height:85vh;overflow:a
 @media(max-width:640px){.route-map{height:260px}.journal-sidebar .route-map{height:230px}}
 </style>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&amp;family=Inter:wght@400;500;600;700&amp;family=Noto+Sans+KR:wght@400;500;700&amp;display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./desk.css?v=20261112a">
-<link rel="stylesheet" href="./redesign.css?v=20261112a">
+<link rel="stylesheet" href="./desk.css?v=20261112b">
+<link rel="stylesheet" href="./redesign.css?v=20261112b">
 <link rel="stylesheet" href="./notebook.css?v=20261104">
-<link rel="stylesheet" href="./grid.css?v=20261112a">
+<link rel="stylesheet" href="./grid.css?v=20261112b">
 </head>
 <body>
 <div class="book">
@@ -392,19 +392,19 @@ Synced to your account ·
 import {installNotebook} from './notebook-ui.mjs';
 import {allNotes,visibleByTags} from './notebook.mjs';
 import {installRoutineJournal} from '../../shared/routine-journal.mjs';
-import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261112a';
+import {authErrorMessage} from '../../shared/auth-errors.mjs?v=20261112b';
 import * as maplibregl from 'https://unpkg.com/maplibre-gl@6.9.0/dist/maplibre-gl.mjs';
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getAuth, GoogleAuthProvider, signInWithPopup, reauthenticateWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 import { getFirestore, doc, getDoc, getDocFromServer, setDoc, deleteDoc, runTransaction, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261112a';
-import {createJournalSync} from './journal-sync.mjs?v=20261112a';
-import {installCalendar} from './google-calendar-ui.mjs?v=20261112a';
-import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261112a';
-import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor,exerciseBlocks,CATEGORIES,CATEGORY_BY_ID,guessCategories,categoryColor,seedCategories,classifyBlocks} from './schedule.mjs?v=20261112a';
-import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261112a';
+import {clone, emptyJournal, mergeJournal, validateJournal, moveTask, previousOpenTasks, journalEntryDates} from './journal-core.mjs?v=20261112b';
+import {createJournalSync} from './journal-sync.mjs?v=20261112b';
+import {installCalendar} from './google-calendar-ui.mjs?v=20261112b';
+import {SCOPES as CALENDAR_SCOPES} from './google-calendar.mjs?v=20261112b';
+import {renderSchedule,weekDates,scheduleKind,slotTime,saveSchedule,autoColor,exerciseBlocks,CATEGORIES,CATEGORY_BY_ID,guessCategories,categoryColor,seedCategories,classifyBlocks} from './schedule.mjs?v=20261112b';
+import {parseTimelineExport,routePointCount,routeSummary,routeTrack} from './timeline.mjs?v=20261112b';
 import {journalConfig as firebaseConfig} from '../../shared/journal-config.mjs';
-import {installFrame} from '../../shared/frame.mjs?v=20261112a';
+import {installFrame} from '../../shared/frame.mjs?v=20261112b';
 const deskFrame=installFrame('journal');
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
@@ -1377,7 +1377,8 @@ let exerciseRecords=[];
 const routineJournal=installRoutineJournal({auth,onChange:records=>{exerciseRecords=records;renderSched();renderWeekly();},getDate:id=>{const v=id==='dailyEmpty'?viewDaily:viewJournal;return v?dayKey(v.y,v.m,v.d):keyOfDate(new Date());},reauthorize:()=>reauthenticateWithPopup(auth.currentUser,provider)});
 for(const id of ['dailySchedule','weeklySchedule','monthGrid']){const host=document.createElement('div');host.className='schedule-tag-filter';document.getElementById(id).before(host);}
 function renderTagFilters(){document.querySelectorAll('.schedule-tag-filter').forEach(host=>notebook.filterUI(host));}
-const previousBuildAll=buildAll;buildAll=function(){previousBuildAll();renderTagFilters();};
+// Category tags appear everywhere (filter, tag manager, editor) once your notebook has loaded.
+const previousBuildAll=buildAll;buildAll=function(){if(uid&&sync?.isReady()&&seedCategories(db))save();previousBuildAll();renderTagFilters();};
 window.addEventListener('message',event=>{if(event.origin!==location.origin||event.source!==parent||event.data?.channel!=='personal-desk')return;if(event.data.type==='manage-tags')notebook.manage();if(event.data.type==='calendar-settings')setTimeout(()=>calendar.open(),300);});
 let deskContext=null;let applyingDeskContext=false;
 function applyDeskContext(ctx){
