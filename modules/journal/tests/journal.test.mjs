@@ -251,3 +251,12 @@ test('recolorAll gives old blocks a category and the colour that goes with it', 
   assert.deepEqual([a.tags,a.color],[['cat-exercise'],1]);assert.deepEqual([b.tags,b.color],[['cat-work'],2]);assert.equal(c.color,4);
   assert.equal(recolorAll(data),0);
 });
+
+test('finance events become one-slot blocks at London time', async () => {
+  const {financeBlocks}=await import('../schedule.mjs');
+  const ev=[{date:'2026-11-17',time:'21:20',kind:'earnings',title:'NVDA'},{date:'2026-11-17',time:'11:00',approx:true,title:'HD'},{date:'2026-11-26',time:'',kind:'holiday',title:'휴장'},{date:'2026-11-17',time:'05:00',title:'too early'}];
+  assert.deepEqual(financeBlocks(ev,'2026-11-17').map(b=>[b.s,b.time]),[[30,'21:20'],[10,'~11:00']]);
+  assert.deepEqual(financeBlocks(ev,'2026-11-26').map(b=>[b.s,b.time,b.kind]),[[0,'종일','holiday']]);
+  const fs=await import('node:fs');const data=JSON.parse(fs.readFileSync(new URL('../finance.json',import.meta.url),'utf8'));
+  assert.ok(Array.isArray(data.events)&&data.events.every(e=>/^\d{4}-\d{2}-\d{2}$/.test(e.date)&&typeof e.title==='string'));
+});

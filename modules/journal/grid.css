@@ -312,3 +312,11 @@ button.mg-wk:hover{color:#2E437F!important}
 .mg-journal{position:absolute;top:4px;right:6px;font:500 9px var(--mono);color:#9A5F2E}
 @media(max-width:640px){.cat-grid{grid-template-columns:1fr 1fr}.cat-words small{display:none}.cat-tile{min-height:48px}}
 .mg-cell{position:relative}
+/* Finance events: white card, ink outline, "$" — stands apart from your own colours. */
+html body .schedule-lane .schedule-block.is-finance{background:#fff!important;border:1px solid #4A4945!important;border-left:3px solid #161616!important;border-radius:3px!important;z-index:2}
+html body .schedule-lane .schedule-block.is-finance .schedule-block-edit{color:#161616!important}
+html body .schedule-lane .schedule-block.fin-earnings{border-left-color:#9A5F2E!important}
+html body .schedule-lane .schedule-block.fin-holiday{background:#F4F3EF!important;border-style:dashed!important}
+.mg-line.fin{border:1px solid #4A4945!important;background:#fff!important;color:#161616!important}
+.cat-filter.fin{--c:#4A4945;--t:#fff;--x:#161616}
+.cat-filter.fin .cat-swatch{background:#161616}

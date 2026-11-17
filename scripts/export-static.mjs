@@ -17,7 +17,7 @@ async function copy(relative=''){
   if(entry.isDirectory()){if(!['tests','.openai'].includes(entry.name))await copy(name);continue;}
   if(!entry.isFile())throw new Error('Only regular files may be published');
   const license=/license/i.test(entry.name);
-  const publicConfig=['modules/routine/firebase-config.json','modules/journal/terrain-style.json'].includes(name);
+  const publicConfig=['modules/routine/firebase-config.json','modules/journal/terrain-style.json','modules/journal/finance.json'].includes(name);
   if(!allowed.has(extname(name))&&!license&&!publicConfig)continue;
   if(/\.test\./.test(name))continue;
   const dest=resolve(output,name);await mkdir(dirname(dest),{recursive:true});await copyFile(resolve(source,name),dest);count++;

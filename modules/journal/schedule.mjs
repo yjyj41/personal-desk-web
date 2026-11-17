@@ -164,13 +164,15 @@ export function renderSchedule(host,{dates,keyOf,getData,onEdit,onMove,onDone,on
         }
         lane.append(card);
       }
-      // Exercise from Routine: green, read-only, opens the exercise log.
-      if(extras&&laneKind!=='plan')for(const ex of extras(key)){
-        const card=document.createElement('div');card.className='schedule-block color-1 kind-actual side-full is-exercise';
+      // Read-only blocks from elsewhere: exercise (green, Done lane) and finance events (Plan lane).
+      if(extras)for(const ex of extras(key)){
+        const finance=ex.source==='finance';
+        if(laneKind!=='all'&&laneKind!==(finance?'plan':'actual'))continue;
+        const card=document.createElement('div');card.className='schedule-block side-full '+(finance?'is-finance fin-'+ex.kind:'color-1 kind-actual is-exercise');
         card.style.top=ex.s*SLOT_HEIGHT+'px';card.style.height=(ex.e-ex.s+1)*SLOT_HEIGHT-2+'px';
         const open=document.createElement('button');open.type='button';open.className='schedule-block-edit';
-        open.title='운동로그 · '+ex.time+(ex.minutes?' · '+ex.minutes+'분':'')+' · '+ex.text;open.setAttribute('aria-label',key+' '+open.title+' 운동로그에서 보기');
-        const time=document.createElement('small');time.textContent='운동 · '+ex.time;const text=document.createElement('span');text.textContent=ex.text;
+        open.title=(finance?'금융 · ':'운동로그 · ')+ex.time+(ex.minutes?' · '+ex.minutes+'분':'')+' · '+ex.text+(finance?' (런던 시간)':'');open.setAttribute('aria-label',key+' '+open.title+(finance?'':' 운동로그에서 보기'));
+        const time=document.createElement('small');time.textContent=(finance?'$ ':'운동 · ')+ex.time;const text=document.createElement('span');text.textContent=ex.text;
         open.append(time,text);open.onclick=()=>onExtra?.(key,ex);card.append(open);lane.append(card);
       }
       day.append(lane);
@@ -190,4 +192,13 @@ export function recolorAll(data){
     if(JSON.stringify([b.tags,b.color])!==before)n++;
   }
   return n;
+}
+// Finance events (London time) as read-only one-slot blocks. All-day ones sit in the first row.
+export function financeBlocks(events,key) {
+  return (events||[]).filter(ev=>ev&&ev.date===key&&typeof ev.title==='string').map((ev,i)=>{
+    let s=0;
+    if(/^\d{1,2}:\d{2}$/.test(ev.time||'')){const [h,m]=ev.time.split(':').map(Number);s=(h-6)*2+Math.floor(m/30);}
+    if(s<0||s>=SLOT_COUNT)return null;
+    return {id:'fin-'+key+'-'+i,s,e:s,text:ev.title,time:ev.time?(ev.approx?'~':'')+ev.time:'종일',kind:ev.kind||'macro'};
+  }).filter(Boolean);
 }
